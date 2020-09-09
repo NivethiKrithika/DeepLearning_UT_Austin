@@ -3,18 +3,35 @@ import torch
 
 class CNNClassifier(torch.nn.Module):
     def __init__(self):
-        """
-        Your code here
-        """
-        raise NotImplementedError('CNNClassifier.__init__')
+        super().__init__()
+        c = 3
+        layers = []
+        layers.append(torch.nn.Conv2d(c,16,kernel_size = 3,padding = 3,stride = 2))
+        layers.append(torch.nn.BatchNorm2d(16))
+        layers.append(torch.nn.ReLU())
+        #layers.append(torch.nn.MaxPool2d(kernel_size = 3,stride = 2,padding = 1))
+        c = 16
+        L = [32,64,128,256]
+        for out_channels in L:
+            #print("out_channels is {}".format(out_channels))
+            #print(c)
+            layers.append(torch.nn.Conv2d(c, out_channels,3,padding = 1,stride = 2))
+            layers.append(torch.nn.BatchNorm2d(out_channels))
+            layers.append(torch.nn.ReLU())
+            layers.append(torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1))
+            layers.append(torch.nn.BatchNorm2d(out_channels))
+            layers.append(torch.nn.ReLU())
+            c = out_channels
+        self.concat_layers = torch.nn.Sequential(*layers)
+        self.classifier = torch.nn.Linear(c,6)
+        #raise NotImplementedError('CNNClassifier.__init__')
 
     def forward(self, x):
-        """
-        Your code here
-        @x: torch.Tensor((B,3,64,64))
-        @return: torch.Tensor((B,6))
-        """
-        raise NotImplementedError('CNNClassifier.forward')
+        #y = self.concat_layers(x)
+        #print(self.concat_layers(x))
+        #print(self.concat_layers(x).mean([2,3]))
+        return self.classifier(self.concat_layers(x).mean([2,3]))
+        #raise NotImplementedError('CNNClassifier.forward')
 
 
 def save_model(model):
