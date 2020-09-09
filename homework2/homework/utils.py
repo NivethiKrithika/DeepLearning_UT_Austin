@@ -3,6 +3,7 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import os
+dir = os.path.dirname(os.path.abspath("__file__"))
 LABEL_NAMES = ['background', 'kart', 'pickup', 'nitro', 'bomb', 'projectile']
 
 dataset_path1 = os.path.join(dir, 'data','train')
