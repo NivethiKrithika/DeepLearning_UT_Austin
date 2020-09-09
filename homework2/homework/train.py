@@ -3,6 +3,7 @@ from .utils import accuracy, load_data
 import torch
 import torch.utils.tensorboard as tb
 import os
+dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path1 = os.path.join(dir, 'data','train')
 dataset_path2 = os.path.join(dir, 'data','valid')
 train_loader = load_data(dataset_path1,batch_size = 32)
