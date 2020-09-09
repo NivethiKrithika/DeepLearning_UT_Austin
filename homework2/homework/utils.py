@@ -5,6 +5,9 @@ from torchvision import transforms
 
 LABEL_NAMES = ['background', 'kart', 'pickup', 'nitro', 'bomb', 'projectile']
 
+dataset_path1 = os.path.join(dir, 'data','train')
+dataset_path2 = os.path.join(dir, 'data','valid')
+
 class SuperTuxDataset(Dataset):
     def __init__(self, dataset_path):
         list1 = []
