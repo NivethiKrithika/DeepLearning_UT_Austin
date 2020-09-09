@@ -7,19 +7,45 @@ LABEL_NAMES = ['background', 'kart', 'pickup', 'nitro', 'bomb', 'projectile']
 
 class SuperTuxDataset(Dataset):
     def __init__(self, dataset_path):
-        """
-        Your code here
-        Hint: Use your solution (or the master solution) to HW1
-        """
-        raise NotImplementedError('SuperTuxDataset.__init__')
+        list1 = []
+        tr_image = torchvision.transforms.ToTensor()
+        self.transform =  torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor()])          
+        to_image=transforms.ToPILImage()
+        i = 1;
+        #print(dataset_path1)
+        for filename in sorted(os.listdir(dataset_path)):
+            file_path = os.path.abspath(os.path.join(dataset_path, filename))
+            _, file_extension = os.path.splitext(file_path)
+            if(file_extension == ".jpg"):
+                image = self.transform(Image.open(file_path)).float()
+                list1.append(image)
+
+                
+        self.data = torch.stack(list1)
+        list1.clear()
+        #print("loaded succesfully")
+        #print(self.data.shape)
+
+        csv_path = os.path.join(dataset_path,"labels.csv")
+        with open(csv_path,'r') as dest_f:
+            data_iter = csv.reader(dest_f,
+                           delimiter = ',')
+            label = [data1 for data1 in data_iter]
+        
+        label = np.array(label)
+        label = (label[1:,1])
+        mod_label = [LABEL_NAMES.index(label_ind) for label_ind in label]
+        self.label = torch.from_numpy(np.array(mod_label))
+        self.nsamples = self.data.shape[0]
 
     def __len__(self):
-        """
-        Your code here
-        """
+
+        return self.nsamples
         raise NotImplementedError('SuperTuxDataset.__len__')
 
     def __getitem__(self, idx):
+        return self.data[idx],self.label[idx].item();
         """
         Your code here
         return a tuple: img, label
