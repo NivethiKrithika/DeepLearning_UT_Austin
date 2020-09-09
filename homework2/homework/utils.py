@@ -7,7 +7,8 @@ import torch
 import torchvision
 dir = os.path.dirname(os.path.abspath("__file__"))
 LABEL_NAMES = ['background', 'kart', 'pickup', 'nitro', 'bomb', 'projectile']
-
+import numpy as np
+import csv
 dataset_path1 = os.path.join(dir, 'data','train')
 dataset_path2 = os.path.join(dir, 'data','valid')
 
