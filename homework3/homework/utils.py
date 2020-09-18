@@ -13,29 +13,63 @@ DENSE_CLASS_DISTRIBUTION = [0.52683655, 0.02929112, 0.4352989, 0.0044619, 0.0041
 
 
 class SuperTuxDataset(Dataset):
-    def __init__(self, dataset_path):
-        """
-        Your code here
-        Hint: Use your solution (or the master solution) to HW1 / HW2
-        Hint: If you're loading (and storing) PIL images here, make sure to call image.load(),
-              to avoid an OS error for too many open files.
-        Hint: Do not store torch.Tensor's as data here, but use PIL images, torchvision.transforms expects PIL images
-              for most transformations.
-        """
-        raise NotImplementedError('SuperTuxDataset.__init__')
+    def __init__(self, dataset_path,transform = None):
+        i = 1
+        print(transform)
+        self.transform = transform
+        #tr_image = torchvision.transforms.ToTensor()
+        #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
+        #print(self.transform1)
+        to_image=transforms.ToPILImage()
+        #i = 1;
+        self.list1 = []
+        #print(dataset_path1)
+        for filename in sorted(os.listdir(dataset_path)):
+            file_path = os.path.abspath(os.path.join(dataset_path, filename))
+            _, file_extension = os.path.splitext(file_path)
+            if(file_extension == ".jpg"):
+                image = Image.open(file_path)
+                #image.save(i+".jpg")
+                self.list1.append(image)
+                image.load()
+                #print(nn)
+                #image.load();
+                if(i == 1000):
+                    break;
+                i = i + 1
+
+                
+        #self.data = torch.stack(list1)
+        #list1.clear()
+        #print("loaded succesfully")
+        #print(self.data.shape)
+
+        csv_path = os.path.join(dataset_path,"labels.csv")
+        with open(csv_path,'r') as dest_f:
+            data_iter = csv.reader(dest_f,
+                           delimiter = ',')
+            label = [data1 for data1 in data_iter]
+        
+        label = np.array(label)
+        label = (label[1:,1])
+        mod_label = [LABEL_NAMES.index(label_ind) for label_ind in label]
+        self.label = torch.from_numpy(np.array(mod_label))
+        self.nsamples = len(self.list1)
 
     def __len__(self):
-        """
-        Your code here
-        """
+
+        return self.nsamples
         raise NotImplementedError('SuperTuxDataset.__len__')
 
     def __getitem__(self, idx):
+        img = self.list1[idx]
+        return self.transform(img),self.label[idx].item();
         """
         Your code here
+        return a tuple: img, label
         """
         raise NotImplementedError('SuperTuxDataset.__getitem__')
-        return img, label
+
 
 
 class DenseSuperTuxDataset(Dataset):
