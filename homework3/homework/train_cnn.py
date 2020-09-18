@@ -30,7 +30,7 @@ def train(args):
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
      #   from os import path
     #model = CNNClassifier()
-    transforms = do_transform(horizontalFlip,randomCrop,colourjitter,resize)
+    transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
     train_loader = load_data(dataset_path1, transform = transforms)
     valid_loader = load_data(dataset_path2,transform = transforms)
     #dataset = SuperTuxDataset(dataset_path,transform = transforms)
