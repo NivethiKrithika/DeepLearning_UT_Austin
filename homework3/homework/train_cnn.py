@@ -3,6 +3,7 @@ from .utils import ConfusionMatrix, load_data, LABEL_NAMES
 import torch
 import torchvision
 import torch.utils.tensorboard as tb
+import os
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 dir = os.path.dirname(os.path.abspath("__file__"))
 print(dir)
