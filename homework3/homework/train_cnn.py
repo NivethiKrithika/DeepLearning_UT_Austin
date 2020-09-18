@@ -1,5 +1,5 @@
 from .models import CNNClassifier, save_model
-from .utils import ConfusionMatrix, load_data, LABEL_NAMES
+from .utils import ConfusionMatrix, load_data, accuracy,LABEL_NAMES
 import torch
 import torchvision
 import torch.utils.tensorboard as tb
