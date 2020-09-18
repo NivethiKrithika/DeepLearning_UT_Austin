@@ -3,7 +3,22 @@ from .utils import ConfusionMatrix, load_data, LABEL_NAMES
 import torch
 import torchvision
 import torch.utils.tensorboard as tb
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+dir = os.path.dirname(os.path.abspath("__file__"))
+print(dir)
+dataset_path1 = os.path.join(dir, 'data','train')
+dataset_path2 = os.path.join(dir, 'data','valid')
 
+def do_transform(horizontalFlip = False,randomCrop = None, colourjitter = False,resize = None ):
+    transforms = []
+    if(horizontalFlip):
+        transforms.append(torchvision.transforms.RandomHorizontalFlip())
+    if(randomCrop is not None):
+        transforms.append(torchvision.transforms.RandomResizedCrop(randomCrop))
+    if (resize is not None):
+        transforms.append(torchvision.transforms.Resize(resize))
+    transforms.append(torchvision.transforms.ToTensor())
+    return torchvision.transforms.Compose(transforms)
 
 def train(args):
     from os import path
@@ -104,7 +119,7 @@ def train(args):
     """
     #save_model(model)
 
-
+"""
 if __name__ == '__main__':
     import argparse
 
@@ -115,3 +130,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     train(args)
+"""
