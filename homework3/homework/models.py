@@ -3,22 +3,62 @@ import torch.nn.functional as F
 
 
 class CNNClassifier(torch.nn.Module):
+    class Block(torch.nn.Module):
+        def __init__(self,in_channels,out_channels,stride):
+            super().__init__()
+            c = in_channels
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(c, out_channels,3,padding = 1,stride = stride),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU())
+            
+            self.down_size = None
+            self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
+                                                 torch.nn.BatchNorm2d(out_channels)) 
+            
+            #if(stride != 1):
+         
+            
+            #self.concat_layers = torch.nn.Sequential(*layers)
+          #  self.classifier = torch.nn.Linear(c,6)
+        #raise NotImplementedError('CNNClassifier.__init__')
+
+        def forward(self, x):
+            identity = x
+            if(self.down_size):
+                identity = self.down_size(x)
+            return self.concat_layers(x) + identity
+                 
+            #y = self.concat_layers(x)
+            #print(self.concat_layers(x))
+            #print(self.concat_layers(x).mean([2,3]))
+            #return self.classifier(self.concat_layers(x).mean([2,3]))
+            #raise NotImplementedError('CNNClassifier.forward')
     def __init__(self):
         super().__init__()
-        """
-        Your code here
-        Hint: Base this on yours or HW2 master solution if you'd like.
-        Hint: Overall model can be similar to HW2, but you likely need some architecture changes (e.g. ResNets)
-        """
-        raise NotImplementedError('CNNClassifier.__init__')
+        c = 3
+        layers = []
+        layers.append(torch.nn.Conv2d(c,16,kernel_size = 3,padding = 3,stride = 2))
+        layers.append(torch.nn.BatchNorm2d(16))
+        layers.append(torch.nn.ReLU())
+        c = 16
+        L = [32,64,128,256]
+        for out_channels in L:
+            layers.append(self.Block(c,out_channels,2))
+            c = out_channels
+        self.final_layers = torch.nn.Sequential(*layers)
+        self.classifier = torch.nn.Linear(c,6)
+        
+    def forward(self,x):
+        z = self.final_layers(x)
+        z = z.mean([2,3])
+        return (self.classifier(z))
+            #print("out_channels is {}".format(out_channels))
+            #print(c)
 
-    def forward(self, x):
-        """
-        Your code here
-        @x: torch.Tensor((B,3,64,64))
-        @return: torch.Tensor((B,6))
-        Hint: Apply input normalization inside the network, to make sure it is applied in the grader
-        """
+
         raise NotImplementedError('CNNClassifier.forward')
 
 
