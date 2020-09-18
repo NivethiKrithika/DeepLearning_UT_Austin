@@ -39,11 +39,7 @@ class SuperTuxDataset(Dataset):
                 #image.save(i+".jpg")
                 self.list1.append(image)
                 image.load()
-                #print(nn)
-                #image.load();
-                if(i == 1000):
-                    break;
-                i = i + 1
+                
 
                 
         #self.data = torch.stack(list1)
