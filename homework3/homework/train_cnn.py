@@ -120,7 +120,7 @@ def train(args):
     """
     #save_model(model)
 
-"""
+
 if __name__ == '__main__':
     import argparse
 
@@ -131,4 +131,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     train(args)
-"""
+
