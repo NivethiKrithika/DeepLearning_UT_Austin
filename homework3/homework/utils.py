@@ -20,10 +20,10 @@ DENSE_CLASS_DISTRIBUTION = [0.52683655, 0.02929112, 0.4352989, 0.0044619, 0.0041
 
 
 class SuperTuxDataset(Dataset):
-    def __init__(self, dataset_path,transform = None):
+    def __init__(self, dataset_path):
         i = 1
-        print(transform)
-        self.transform = transform
+        #print(transform)
+        self.transform = torchvision.transforms.ToTensor()
         #tr_image = torchvision.transforms.ToTensor()
         #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
         #print(self.transform1)
