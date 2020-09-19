@@ -26,7 +26,9 @@ class SuperTuxDataset(Dataset):
         #torchvision.transforms.Resize((88,88)),
                                                      #    torchvision.transforms.RandomResizedCrop(24),
         self.transform = torchvision.transforms.Compose([torchvision.transforms.RandomHorizontalFlip(),
-                                                       torchvision.transforms.ToTensor()])
+                                                       torchvision.transforms.ToTensor(),
+                                                        torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
+                                                                                        std = [0.229,0.224,0.225])])
         #tr_image = torchvision.transforms.ToTensor()
         #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
         #print(self.transform1)
