@@ -43,7 +43,7 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9,weight_decay = 1e-3)
+    optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9,weight_decay = 5e-3)
     n_epochs = 30
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
