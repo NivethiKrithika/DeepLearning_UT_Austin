@@ -31,8 +31,8 @@ def train(args):
      #   from os import path
     #model = CNNClassifier()
     transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
-    train_loader = load_data(dataset_path1)
-    valid_loader = load_data(dataset_path2)
+    train_loader = load_data(dataset_path1,batch_size =256)
+    valid_loader = load_data(dataset_path2,batch_size = 256)
     #dataset = SuperTuxDataset(dataset_path,transform = transforms)
     #train_logger, valid_logger = None, None
     #if args.log_dir is not None:
