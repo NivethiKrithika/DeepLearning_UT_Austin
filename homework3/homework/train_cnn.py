@@ -106,6 +106,8 @@ def train(args):
             accu = accuracy(aggregated_valid_output,aggregated_valid_label) 
             #valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
             print("valid accu is {}".format(accu))
+            if(accu > 0.92):
+                break
 
     """
     Your code here, modify your HW1 code
