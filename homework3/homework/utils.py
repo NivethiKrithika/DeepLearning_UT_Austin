@@ -30,6 +30,10 @@ class SuperTuxDataset(Dataset):
                                                        color_jitter.brightness, color_jitter.contrast, color_jitter.saturation,
                                                         color_jitter.hue),
                                                          torchvision.transforms.RandomHorizontalFlip(),
+                                                         torchvision.transforms.RandomVerticalFlip(p=0.5),
+                                                         torchvision.transforms.RandomRotation(degree = 25),
+                                                         torchvision.transforms.RandomGrayscale(p=0.05),
+                                                         
                                                        torchvision.transforms.ToTensor(),
                                                         torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
                                                                                         std = [0.229,0.224,0.225])])
