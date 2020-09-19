@@ -10,6 +10,7 @@ class CNNClassifier(torch.nn.Module):
             self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(c, out_channels,3,padding = 1,stride = stride),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1),
                                                      torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
