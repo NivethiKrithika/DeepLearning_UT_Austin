@@ -50,12 +50,13 @@ class CNNClassifier(torch.nn.Module):
             layers.append(self.Block(c,out_channels,2))
             c = out_channels
         self.final_layers = torch.nn.Sequential(*layers)
-        self.classifier = torch.nn.Linear(c,6)
+        self.classifier = torch.nn.Linear(256*3*3,1000)
+        self.final = torch.nn.Linear(1000,6)
         
     def forward(self,x):
         z = self.final_layers(x)
-        z = z.mean([2,3])
-        return (self.classifier(z))
+        #z = z.mean([2,3])
+        return (self.final(self.classifier(z.view(z.size(0),-1))))
             #print("out_channels is {}".format(out_channels))
             #print(c)
 
