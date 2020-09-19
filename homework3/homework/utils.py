@@ -23,7 +23,9 @@ class SuperTuxDataset(Dataset):
     def __init__(self, dataset_path):
         i = 1
         #print(transform)
-        self.transform = torchvision.transforms.Compose([torchvision.transforms.RandomHorizontalFlip(),
+        self.transform = torchvision.transforms.Compose([torchvision.transforms.Resize(128,128),
+                                                         torchvision.transforms.RandomResizedCrop(64,64),
+                                                         torchvision.transforms.RandomHorizontalFlip(),
                                                        torchvision.transforms.ToTensor()])
         #tr_image = torchvision.transforms.ToTensor()
         #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
