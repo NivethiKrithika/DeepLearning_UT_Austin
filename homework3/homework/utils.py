@@ -31,7 +31,7 @@ class SuperTuxDataset(Dataset):
                                                         color_jitter.hue),
                                                          torchvision.transforms.RandomHorizontalFlip(),
                                                          torchvision.transforms.RandomVerticalFlip(p=0.5),
-                                                         torchvision.transforms.RandomRotation(degree = 25),
+                                                         torchvision.transforms.RandomRotation(degrees = 15),
                                                          torchvision.transforms.RandomGrayscale(p=0.05),
                                                          
                                                        torchvision.transforms.ToTensor(),
