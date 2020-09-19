@@ -44,7 +44,7 @@ def train(args):
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
     optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 10
+    n_epochs = 20
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
     for iter in range(n_epochs):
