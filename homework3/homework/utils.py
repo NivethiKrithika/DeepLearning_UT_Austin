@@ -26,15 +26,11 @@ class SuperTuxDataset(Dataset):
         #torchvision.transforms.Resize((88,88)),
                                                      #    torchvision.transforms.RandomResizedCrop(24),
              #torchvision.transforms.RandomGrayscale(p=0.05),
-        color_jitter = transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)
+        color_jitter = transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05)
         self.transform = torchvision.transforms.Compose([transforms.ColorJitter.get_params(
-                                                       color_jitter.brightness, color_jitter.contrast, color_jitter.saturation,
-                                                        color_jitter.hue),
+                                                       transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05),
                                                          torchvision.transforms.RandomHorizontalFlip(),
-                                                         torchvision.transforms.RandomVerticalFlip(),
-                                                         torchvision.transforms.RandomRotation(degrees = 10),
-                                                        
-                                                         
+                                                         torchvision.transforms.RandomVerticalFlip(), 
                                                        torchvision.transforms.ToTensor(),
                                                         torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
                                                                                         std = [0.229,0.224,0.225])])
