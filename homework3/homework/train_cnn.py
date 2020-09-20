@@ -30,6 +30,7 @@ def train(args):
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
      #   from os import path
     #model = CNNClassifier()
+    validation_accuracies = []
     transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
     train_loader = load_data(dataset_path1)
     valid_loader = load_data(dataset_path2)
@@ -43,7 +44,8 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9,weight_decay = 5e-3)
+    optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9,weight_decay = 1e-3)
+    scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 50)
     n_epochs = 30
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
@@ -104,6 +106,8 @@ def train(args):
             aggregated_valid_output = torch.cat(list_output_valid)
             aggregated_valid_label = torch.cat(list_label_valid)
             accu = accuracy(aggregated_valid_output,aggregated_valid_label) 
+            validation_accuracies.append(accu)
+            scheduler.step(np.mean(np.array(validation_accuracies),dtype = np.float))
             #valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
             print("valid accu is {}".format(accu))
 
