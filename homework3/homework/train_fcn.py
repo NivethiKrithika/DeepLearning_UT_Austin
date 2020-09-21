@@ -68,9 +68,9 @@ def train(args):
             optimizer.step()
             optimizer.zero_grad()
             train_global_step +=1
-            list_output_train.append(output).detach()
+            list_output_train.append(output)
             list_label_train.append(train_label)
-        aggregated_output = torch.cat(list_output_train)
+        aggregated_output = torch.cat(list_output_train).detach()
         #print("aggregated_output is")
         #print(aggregated_output)
         aggregated_label = torch.cat(list_label_train)
