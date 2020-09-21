@@ -58,7 +58,7 @@ def train(args):
               #print(output)
             #print(output1.shape)
             #print(train_label.shape)
-            computed_loss = loss(output,train_label.long()).float()
+            computed_loss = loss(output,train_label.long()).float().detach().cpu()
             #print("loss type is {}".format(computed_loss.dtype))
             #print(computed_loss)
             #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
