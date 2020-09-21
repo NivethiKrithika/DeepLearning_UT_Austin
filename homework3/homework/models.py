@@ -175,6 +175,19 @@ class FCN(torch.nn.Module):
 
         
     def forward(self,x):
+        padding_done = 0
+        padded_oh = 0
+        padded_ow = 0
+        if x.size(2) < 16 or x.size(3) < 16:
+            padding_done = 1
+            ow, oh = x.size(2),x.size(3)
+            #print(oh)
+            #print(ow)
+            padh = 16 - oh if oh < 16 else 0
+            padw = 16 - ow if ow < 16 else 0
+            padded_ow = ow
+            padded_oh = oh
+            x = F.pad(x, (0, padh,0, padw), value =0)
         z = self.final_layers(x)
         #print(z.shape)
         m = self.up_conv_layer(z)
@@ -183,6 +196,8 @@ class FCN(torch.nn.Module):
         #print(n.shape)
         #z = z.mean([2,3])
         q =self.out_conv(n)
+        if padding_done == 1:
+            q = q[:,:,0:padded_ow,0:padded_oh]
         #print(q.shape)
         return q
         """
