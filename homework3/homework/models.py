@@ -157,7 +157,7 @@ class FCN(torch.nn.Module):
             layers1.append(self.Block1(n,out_channels1,2))
             n = out_channels1
         self.final = torch.nn.Sequential(*layers1)
-        self.out_conv = torch.nn.Conv2d(32,6,1)
+        self.out_conv = torch.nn.Conv2d(32,5,1)
                         #torch.nn.ConvTranspose2d(128,64,3,stride = 2, padding = 1),
                         #torch.nn.pad(img, (0, 0, padw, padh), fill=fill)
                         #torch.nn.ConvTranspose2d(64,32,2,stride = 2, padding = 1),
