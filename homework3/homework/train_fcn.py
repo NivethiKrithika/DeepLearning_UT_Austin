@@ -55,7 +55,7 @@ def train(args):
             #print(train_label.shape)
             #accs = accuracy(output,train_label)
             #print(accs)
-            train_accu.extend(accuracy(output,train_label)).detach().cpu())
+            train_accu.extend(accuracy(output,train_label)).detach().cpu()
             #print("loss type is {}".format(computed_loss.dtype))
             #print(computed_loss)
             #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
