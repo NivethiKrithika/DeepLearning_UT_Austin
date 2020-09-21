@@ -48,8 +48,7 @@ def train(args):
             train_label = train_label.to(device)
             output = model(train_data)
             #output1 = torch.argmax(output,dim = 1)
-            list_output_train.append(float(output))
-            list_label_train.append(float(train_label))
+
             #print(train_data.shape)
             #print(train_data)
             #print("output shape is")
@@ -69,6 +68,8 @@ def train(args):
             optimizer.step()
             optimizer.zero_grad()
             train_global_step +=1
+            list_output_train.append(output)
+            list_label_train.append(train_label)
         aggregated_output = torch.cat(list_output_train)
         #print("aggregated_output is")
         #print(aggregated_output)
