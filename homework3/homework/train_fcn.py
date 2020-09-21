@@ -93,10 +93,10 @@ def train(args):
                 valid_data,valid_label = valid_data.to(device), valid_label.to(device)
                 valid_output = model(valid_data)
                 #valid_output1 = torch.argmax(valid_output,dim = 1)
-                computed_valid_loss = loss(valid_output,valid_label.long())
+                computed_valid_loss = loss(valid_output,valid_label.long()).float()
                 #valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
                 #print("valid loss is {}".format(computed_valid_loss))
-                list_output_valid.append(float(valid_output))
+                list_output_valid.append(valid_output)
                 list_label_valid.append(valid_label)
 
             aggregated_valid_output = torch.cat(list_output_valid)
