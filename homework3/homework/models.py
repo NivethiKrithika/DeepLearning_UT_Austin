@@ -122,7 +122,7 @@ class FCN(torch.nn.Module):
              #   identity = self.down_size(x)
             m=self.concat_layers1(x)
             #print(m.shape)
-            return(R.pad(m, pad=(0,1,0,1), mode='constant', value=0))
+            return(F.pad(m, pad=(0,1,0,1), mode='constant', value=0))
             #print(m.shape)
             #return m
             
