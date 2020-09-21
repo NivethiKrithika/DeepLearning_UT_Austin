@@ -8,8 +8,8 @@ import torch.utils.tensorboard as tb
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 import os
 dir = os.path.dirname(os.path.abspath("__file__"))
-dataset_path2 = os.path.join(dir,'..' ,'dense_data','train')
-dataset_path3 = os.path.join(dir, '..','dense_data','valid')
+dataset_path2 = os.path.join(dir,'dense_data','train')
+dataset_path3 = os.path.join(dir,'dense_data','valid')
 
 def train(args):
     from os import path
@@ -48,8 +48,8 @@ def train(args):
             train_label = train_label.to(device)
             output = model(train_data)
             #output1 = torch.argmax(output,dim = 1)
-            list_output_train.append(output)
-            list_label_train.append(train_label)
+            list_output_train.append(float(output))
+            list_label_train.append(float(train_label))
             #print(train_data.shape)
             #print(train_data)
             #print("output shape is")
@@ -75,7 +75,7 @@ def train(args):
         aggregated_label = torch.cat(list_label_train)
         #print("aggregated_label is")
         #print(aggregated_label)
-        train_accu = accuracy(aggregated_output,aggregated_label)
+        train_accu = accuracy(aggregated_output,aggregated_label).float().detach()
         #train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
         print("train accu is {}".format(train_accu))
         
@@ -91,12 +91,12 @@ def train(args):
                 computed_valid_loss = loss(valid_output,valid_label.long())
                 #valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
                 #print("valid loss is {}".format(computed_valid_loss))
-                list_output_valid.append(valid_output)
+                list_output_valid.append(float(valid_output))
                 list_label_valid.append(valid_label)
 
             aggregated_valid_output = torch.cat(list_output_valid)
             aggregated_valid_label = torch.cat(list_label_valid)
-            accu = accuracy(aggregated_valid_output,aggregated_valid_label) 
+            accu = accuracy(aggregated_valid_output,aggregated_valid_label).float().detach() 
             validation_accuracies.append(accu)
             scheduler.step(np.mean(np.array(validation_accuracies),dtype = np.float))
             #valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
