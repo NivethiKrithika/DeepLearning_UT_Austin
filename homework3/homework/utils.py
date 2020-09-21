@@ -89,6 +89,11 @@ class DenseSuperTuxDataset(Dataset):
     def __init__(self, dataset_path, transform=dense_transforms.ToTensor()):
         from glob import glob
         from os import path
+        transform = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05),
+                                                         dense_transforms.RandomHorizontalFlip(),
+                                                         dense_transforms.ToTensor(),
+                                                         dense_transforms.Normalize(mean = [0.485,0.456,0.406],
+                                                                                        std = [0.229,0.224,0.225])])
         self.files = []
         #print(path.join(dataset_path, '*_im.jpg'))
         for im_f in sorted(glob(path.join(dataset_path, '*_im.jpg'))):
