@@ -48,7 +48,7 @@ def train(args):
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            computed_loss = loss(output,train_label.Long()).float()
+            computed_loss = loss(output,train_label.long()).float()
             #list_output_train.append(output)
             #list_label_train.append(train_label)
             print(output.shape)
