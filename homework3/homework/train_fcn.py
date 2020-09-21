@@ -59,7 +59,7 @@ def train(args):
             #print(output1.shape)
             #print(train_label.shape)
             computed_loss = loss(output,train_label.long()).float()
-            list_output_train.append(output).detach().cpu()
+            list_output_train.append(output)
             list_label_train.append(train_label)
             del(train_data)
             del(train_label)
