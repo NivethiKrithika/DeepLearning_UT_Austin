@@ -51,6 +51,8 @@ def train(args):
             computed_loss = loss(output,train_label.long()).float()
             #list_output_train.append(output)
             #list_label_train.append(train_label)
+            print(output.shape)
+            print(train_label.shape)
 
             train_accu.extend(accuracy(output,train_label).detach().cpu().numpy())
             #print("loss type is {}".format(computed_loss.dtype))
