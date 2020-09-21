@@ -20,8 +20,8 @@ def train(args):
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     validation_accuracies = []
     #transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
-    #train_loader = load_data(dataset_path2)
-    #valid_loader = load_data(dataset_path3)
+    train_loader = load_dense_data(dataset_path2)
+    valid_loader = load_dense_data(dataset_path3)
     #dataset = SuperTuxDataset(dataset_path,transform = transforms)
     #train_logger, valid_logger = None, None
     #if args.log_dir is not None:
