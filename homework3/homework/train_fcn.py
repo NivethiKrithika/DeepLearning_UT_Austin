@@ -81,8 +81,8 @@ def train(args):
         train_accu = accuracy(aggregated_output,aggregated_label).float()
         #train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
         print("train accu is {}".format(train_accu))
-        delete(aggregated_output)
-        delete(aggregated_label)
+        del(aggregated_output)
+        del(aggregated_label)
         
         model.eval()
         with torch.no_grad():
