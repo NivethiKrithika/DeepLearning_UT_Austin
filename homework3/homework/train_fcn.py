@@ -42,27 +42,18 @@ def train(args):
         print("epoch is {}".format(iter))
         list_output_train = []
         list_label_train = []
+        train_accu = []
         for i,batch in enumerate(train_loader):
             train_data,train_label = batch 
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            #output1 = torch.argmax(output,dim = 1)
-
-            #print(train_data.shape)
-            #print(train_data)
-            #print("output shape is")
-            #print(output.shape)
-            #if(iter > 18):
-              #print("output is")
-              #print(output)
-            #print(output1.shape)
-            #print(train_label.shape)
             computed_loss = loss(output,train_label.long()).float()
-            list_output_train.append(output)
-            list_label_train.append(train_label)
+            #list_output_train.append(output)
+            #list_label_train.append(train_label)
             del(train_data)
             del(train_label)
+            train_accu.extend(accuracy(output,train_label).detach().cpu().numpy())
             #print("loss type is {}".format(computed_loss.dtype))
             #print(computed_loss)
             #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
@@ -73,19 +64,19 @@ def train(args):
             optimizer.zero_grad()
             train_global_step +=1
 
-        aggregated_output = torch.cat(list_output_train)
+        #aggregated_output = torch.cat(list_output_train)
         #print("aggregated_output is")
         #print(aggregated_output)
-        aggregated_label = torch.cat(list_label_train)
-        del(list_output_train)
-        del(list_label_train)
+        #aggregated_label = torch.cat(list_label_train)
+        #del(list_output_train)
+        #del(list_label_train)
         #print("aggregated_label is")
         #print(aggregated_label)
-        train_accu = accuracy(aggregated_output,aggregated_label).float().detach().cpu()
+        #train_accu = accuracy(aggregated_output,aggregated_label).float().detach().cpu()
         #train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
-        print("train accu is {}".format(train_accu))
-        del(aggregated_output)
-        del(aggregated_label)
+        print("train accu is {}".format(np.mean(train_accu)))
+        #del(aggregated_output)
+        #del(aggregated_label)
         
         model.eval()
         with torch.no_grad():
