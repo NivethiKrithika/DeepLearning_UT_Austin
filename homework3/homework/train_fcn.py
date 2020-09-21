@@ -59,6 +59,10 @@ def train(args):
             #print(output1.shape)
             #print(train_label.shape)
             computed_loss = loss(output,train_label.long()).float()
+            list_output_train.append(output).detach().cpu()
+            list_label_train.append(train_label)
+            del(train_data)
+            del(train_label)
             #print("loss type is {}".format(computed_loss.dtype))
             #print(computed_loss)
             #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
@@ -68,8 +72,7 @@ def train(args):
             optimizer.step()
             optimizer.zero_grad()
             train_global_step +=1
-            list_output_train.append(output)
-            list_label_train.append(train_label)
+
         aggregated_output = torch.cat(list_output_train)
         #print("aggregated_output is")
         #print(aggregated_output)
