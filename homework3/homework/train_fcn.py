@@ -74,11 +74,15 @@ def train(args):
         #print("aggregated_output is")
         #print(aggregated_output)
         aggregated_label = torch.cat(list_label_train)
+        del(list_output_train)
+        del(list_label_train)
         #print("aggregated_label is")
         #print(aggregated_label)
         train_accu = accuracy(aggregated_output,aggregated_label).float().detach()
         #train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
         print("train accu is {}".format(train_accu))
+        delete(aggregated_output)
+        delete(aggregated_label)
         
         model.eval()
         with torch.no_grad():
