@@ -96,7 +96,7 @@ class FCN(torch.nn.Module):
         self.third_conv = self.construct_layer(64,128)
         self.first_up_conv = self.up_conv(128,64)
         self.second_up_conv = self.up_conv(128,32)
-        self.third_up_conv = self.up_conv(64,32)
+        self.third_up_conv = self.up_conv(64,5)
         
        # layers= []
        # L = [32,64,128]
@@ -148,9 +148,9 @@ class FCN(torch.nn.Module):
         second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
         #print ("n shape is {}".format(second_up_res.shape))
         
-        third_up_res = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
+        final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
         #print("third shape is {}".format(third_up_res.shape))
-        final = self.out_conv(third_up_res)
+        #final = self.out_conv(third_up_res)
         if padding_done == 1:
             final = final[:,:,0:padded_ow,0:padded_oh]
         return final
