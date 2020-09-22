@@ -65,113 +65,61 @@ class CNNClassifier(torch.nn.Module):
 
 
 class FCN(torch.nn.Module):
-    class Block(torch.nn.Module):
-        def __init__(self,in_channels,out_channels,stride):
+    class construct_layer(torch.nn.Module):
+        def __init__(self,in_channels,out_channels):
             super().__init__()
-            c = in_channels
-            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(c, out_channels,3,padding = 1,stride = stride),
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
-                                                     #torch.nn.Dropout(p = 0.1),
-                                                     #torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
-                                                     #torch.nn.BatchNorm2d(out_channels),
-                                                     #torch.nn.ReLU())
-            
-            self.down_size = None
-            self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
-                                                 torch.nn.BatchNorm2d(out_channels)) 
-            
-            #if(stride != 1):
-         
-            
-            #self.concat_layers = torch.nn.Sequential(*layers)
-          #  self.classifier = torch.nn.Linear(c,6)
-        #raise NotImplementedError('CNNClassifier.__init__')
+        def forward(self,x):
+              return self.concat_layers(x)
 
-        def forward(self, x):
-            identity = x
-            if(self.down_size):
-                identity = self.down_size(x)
-            return self.concat_layers(x) + identity
-    class Block1(torch.nn.Module):
-        def __init__(self,in_channels,out_channels,stride):
-            super().__init__()
-            c = in_channels
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(c, out_channels,3,padding = 1,stride = 2),
+    class up_conv(torch.nn.Module):
+        def __init__(self,in_channels,out_channels):
+            super().__init__()  
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.ConvTranspose2d(out_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
-                                                     #torch.nn.Dropout(p = 0.1),
-                                                     #torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
-                                                     #torch.nn.BatchNorm2d(out_channels),
-                                                     #torch.nn.ReLU())
-            
-            #self.down_size = None
-            #self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
-                                                # torch.nn.BatchNorm2d(out_channels)) 
-            
-            #if(stride != 1):
-         
-            
-            #self.concat_layers = torch.nn.Sequential(*layers)
-          #  self.classifier = torch.nn.Linear(c,6)
-        #raise NotImplementedError('CNNClassifier.__init__')
+           
+        def forward(self,x): 
+            return self.concat_layers1(x)
 
-        def forward(self, x):
-            #identity = x
-            #if(self.down_size):
-             #   identity = self.down_size(x)
-            m=self.concat_layers1(x)
-            #print(m.shape)
-            return(F.pad(m, pad=(0,1,0,1), mode='constant', value=0))
-            #print(m.shape)
-            #return m
-            
-                 
-            #y = self.concat_layers(x)
-            #print(self.concat_layers(x))
-            #print(self.concat_layers(x).mean([2,3]))
-            #return self.classifier(self.concat_layers(x).mean([2,3]))
-            #raise NotImplementedError('CNNClassifier.forward')
+        #raise NotImplementedError('FCN.__init__')
     def __init__(self):
         super().__init__()
-        c = 3
-        layers = []
-        #layers.append(torch.nn.Conv2d(c,16,kernel_size = 3,padding = 3,stride = 2))
-        #layers.append(torch.nn.BatchNorm2d(16))
-        #layers.append(torch.nn.ReLU())
-        #c = 
-        L = [32,64,128]
-        for out_channels in L:
-            layers.append(self.Block(c,out_channels,1))
-            layers.append(torch.nn.MaxPool2d(2))
-            c = out_channels
-        self.final_layers = torch.nn.Sequential(*layers)
+        self.first_conv = self.construct_layer(3,32)
+        self.second_conv = self.construct_layer(32,64)
+        self.third_conv = self.construct_layer(64,128)
+        self.first_up_conv = self.up_conv(128,64)
+        self.second_up_conv = self.up_conv(128,32)
+        self.third_up_conv = self.up_conv(64,32)
         
-        self.up_conv_layer = torch.nn.Sequential(torch.nn.Conv2d(128, 128, 3, stride=1, padding=1),
-                                                         torch.nn.BatchNorm2d(128),
-                                                         torch.nn.ReLU())
-        layers1 = []
-        n = 128
-        M = [64,32,32]
-        for out_channels1 in M: 
-            layers1.append(self.Block1(n,out_channels1,2))
-            n = out_channels1
-        self.final = torch.nn.Sequential(*layers1)
+       # layers= []
+       # L = [32,64,128]
+       # c = 3
+       # for l in L:
+        #    layers.append(self.construct_layer(c,l))
+         #   layers.append(torch.nn.Maxpool2d(2))
+          #  c = l
+        #layers.append(self.up_conv(c,64))
+        
+            
+        self.pool = torch.nn.MaxPool2d(2)
+        #self.final_layers = torch.nn.Sequential(*layers)
+        #self.final = torch.nn.Sequential(*layers1)
         self.out_conv = torch.nn.Conv2d(32,5,1)
-                        #torch.nn.ConvTranspose2d(128,64,3,stride = 2, padding = 1),
-                        #torch.nn.pad(img, (0, 0, padw, padh), fill=fill)
-                        #torch.nn.ConvTranspose2d(64,32,2,stride = 2, padding = 1),
-                        #torch.nn.ConvTranspose2d(32,3,2,stride = 2, padding = 1))
-        #self.classifier = torch.nn.Linear(c,6)
-        """
-        Your code here.
-        Hint: The FCN can be a bit smaller the the CNNClassifier since you need to run it at a higher resolution
-        Hint: Use up-convolutions
-        Hint: Use skip connections
-        Hint: Use residual connections
-        Hint: Always pad by kernel_size / 2, use an odd kernel_size
-        """
-        #raise NotImplementedError('FCN.__init__')
+
 
         
     def forward(self,x):
@@ -188,18 +136,31 @@ class FCN(torch.nn.Module):
             padded_ow = ow
             padded_oh = oh
             x = F.pad(x, (0, padh,0, padw), value =0)
-        z = self.final_layers(x)
-        #print(z.shape)
-        m = self.up_conv_layer(z)
-        #print(m.shape) 
-        n = self.final(m)
-        #print(n.shape)
-        #z = z.mean([2,3])
-        q =self.out_conv(n)
+        
+        first_res = self.first_conv(x)
+        max_pool_first = self.pool(first_res)
+        #print("max_y shape is {}".format(max_pool_first.shape))
+        
+        second_res =  self.second_conv(max_pool_first)
+        max_pool_sec = self.pool(second_res)
+        #print("max_z shape is {}".format(max_pool_sec.shape))
+        
+        third_res =  self.third_conv(max_pool_sec)       
+        max_pool_third = self.pool(third_res)
+        #print("max_m size is {}".format(max_pool_third.shape))
+        
+        first_up_res = self.first_up_conv(max_pool_third)
+        #print(first_up_res.shape)
+        
+        second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
+        #print ("n shape is {}".format(second_up_res.shape))
+        
+        third_up_res = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
+        #print("third shape is {}".format(third_up_res.shape))
+        final = self.out_conv(third_up_res)
         if padding_done == 1:
-            q = q[:,:,0:padded_ow,0:padded_oh]
-        #print(q.shape)
-        return q
+            final = final[:,:,0:padded_ow,0:padded_oh]
+        return final
         """
         Your code here
         @x: torch.Tensor((B,3,H,W))
