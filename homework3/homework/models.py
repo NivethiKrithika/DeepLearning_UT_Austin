@@ -75,7 +75,7 @@ class FCN(torch.nn.Module):
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
         def forward(self,x): 
-            return self.concat_layers(x))
+            return self.concat_layers(x)
 
 
     class up_conv(torch.nn.Module):
