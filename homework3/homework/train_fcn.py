@@ -86,24 +86,37 @@ def train(args):
         with torch.no_grad():
             list_output_valid = []
             list_label_valid = []
-            for i, valid_batch in enumerate(valid_loader):
-                valid_data,valid_label = valid_batch
-                valid_data,valid_label = valid_data.to(device), valid_label.to(device)
-                valid_output = model(valid_data)
+            c = ConfusionMatrix()
+            for img, label in valid_loader:
+                c.add(model(img.to(device)).argmax(1), label.to(device))
+            print("global accuracy is {}".format(c.global_accuracy))
+            print("iou is {}".format(c.iou))
+            #for i, valid_batch in enumerate(valid_loader):
+                #valid_data,valid_label = valid_batch
+                #valid_data,valid_label = valid_data.to(device), valid_label.to(device)
+                #valid_output = model(valid_data)
                 #valid_output1 = torch.argmax(valid_output,dim = 1)
                 #computed_valid_loss = loss(valid_output,valid_label.long()).float()
                 #valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
                 #print("valid loss is {}".format(computed_valid_loss))
-                list_output_valid.append(valid_output)
-                list_label_valid.append(valid_label)
+                #list_output_valid.append(valid_output)
+                #list_label_valid.append(valid_label)
 
-            aggregated_valid_output = torch.cat(list_output_valid)
-            aggregated_valid_label = torch.cat(list_label_valid)
-            accu = accuracy(aggregated_valid_output,aggregated_valid_label).float().detach().cpu()
-            validation_accuracies.append(accu)
-            scheduler.step(np.mean(np.array(validation_accuracies),dtype = np.float))
+            #aggregated_valid_output = torch.cat(list_output_valid)
+            #aggregated_valid_label = torch.cat(list_label_valid)
+            #del(list_output_valid)
+            #del(list_label_valid)
+            #print(aggregated_valid_output.shape)
+            #print(aggregated_valid_label.shape)
+            #conf = ConfusionMatrix()
+            #for i,(img,label) in enumerate(valid_loader,batch_size = 32):
+                #conf.add(torch.argmax(aggregated_valid_output[i]),aggregated_valid_label[i])
+            
+            #accu = accuracy(aggregated_valid_output,aggregated_valid_label).float().detach().cpu()
+            #validation_accuracies.append(accu)
+            #scheduler.step(np.mean(np.array(validation_accuracies),dtype = np.float))
             #valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
-            print("valid accu is {}".format(accu))
+            #print("valid accu is {}".format(accu))
 
     """
     Your code here, modify your HW1 / HW2 code
