@@ -75,8 +75,10 @@ class FCN(torch.nn.Module):
                                                      torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
-        def forward(self,x):
-              return self.concat_layers(x)
+            self.down_sample = torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = 1)
+        def forward(self,x): 
+            return (self.down_sample(x) + self.concat_layers(x))
+
 
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
