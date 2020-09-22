@@ -37,6 +37,7 @@ def train(args):
     n_epochs = 11
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
+    print(optimizer.param_groups[0]['lr'])
     for iter in range(n_epochs):
         model.train()
         print("epoch is {}".format(iter))
