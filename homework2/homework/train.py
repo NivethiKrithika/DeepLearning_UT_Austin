@@ -45,7 +45,8 @@ def train(args):
             computed_loss = loss(output,train_label.long()).float()
             #print("loss type is {}".format(computed_loss.dtype))
             #print(computed_loss)
-            train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
+            if args.log_dir is not None:
+                train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
             #print("train loss is {} ".format(computed_loss))
            
             computed_loss.backward()
@@ -59,7 +60,8 @@ def train(args):
         #print("aggregated_label is")
         #print(aggregated_label)
         train_accu = accuracy(aggregated_output,aggregated_label)
-        train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
+        if args.log_dir is not None:
+            train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
         print("train accu is {}".format(train_accu))
         
         model.eval()
@@ -71,15 +73,17 @@ def train(args):
                 valid_data,valid_label = valid_data.to(device), valid_label.to(device)
                 valid_output = model(valid_data)
                 computed_valid_loss = loss(valid_output,valid_label.long())
-                valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
+                if args.log_dir is not None:
+                    valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
                 #print("valid loss is {}".format(computed_valid_loss))
                 list_output_valid.append(valid_output)
                 list_label_valid.append(valid_label)
 
             aggregated_valid_output = torch.cat(list_output_valid)
             aggregated_valid_label = torch.cat(list_label_valid)
-            accu = accuracy(aggregated_valid_output,aggregated_valid_label) 
-            valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
+            accu = accuracy(aggregated_valid_output,aggregated_valid_label)
+            if args.log_dir is not None:
+                valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
             print("valid accu is {}".format(accu))
 
     """
