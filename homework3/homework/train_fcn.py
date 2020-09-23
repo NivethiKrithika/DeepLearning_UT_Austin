@@ -32,8 +32,8 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 0.005)
-    scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 50)
+    optimizer = torch.optim.Adam(model.parameters(),lr = 0.0003)
+    scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     n_epochs = 11
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
