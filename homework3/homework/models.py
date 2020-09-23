@@ -34,12 +34,12 @@ class CNNClassifier(torch.nn.Module):
         layers.append(torch.nn.BatchNorm2d(16))
         layers.append(torch.nn.ReLU())
         c = 16
-        L = [32,64,128,256]
+        L = [64,128,256,512]
         for out_channels in L:
             layers.append(self.Block(c,out_channels,2))
             c = out_channels
         self.final_layers = torch.nn.Sequential(*layers)
-        self.classifier = torch.nn.Sequential(torch.nn.Linear(256*3*3,1000),torch.nn.ReLU(),torch.nn.Dropout(p = 0.5))
+        self.classifier = torch.nn.Sequential(torch.nn.Linear(512*3*3,1000),torch.nn.ReLU(),torch.nn.Dropout(p = 0.5))
         self.final = torch.nn.Linear(1000,6)
         
     def forward(self,x):
