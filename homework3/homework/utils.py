@@ -22,24 +22,16 @@ DENSE_CLASS_DISTRIBUTION = [0.52683655, 0.02929112, 0.4352989, 0.0044619, 0.0041
 class SuperTuxDataset(Dataset):
     def __init__(self, dataset_path):
         i = 1
-        #print(transform)
-        #torchvision.transforms.Resize((88,88)),
-                                                     #    torchvision.transforms.RandomResizedCrop(24),
-             #torchvision.transforms.RandomGrayscale(p=0.05),
         color_jitter = transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05)
-        self.transform = torchvision.transforms.Compose([transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05),
+        self.transform = torchvision.transforms.Compose([transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
                                                          torchvision.transforms.RandomHorizontalFlip(),
                                                          torchvision.transforms.RandomVerticalFlip(), 
                                                        torchvision.transforms.ToTensor(),
                                                         torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
                                                                                         std = [0.229,0.224,0.225])])
-        #tr_image = torchvision.transforms.ToTensor()
-        #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
-        #print(self.transform1)
+  
         to_image=transforms.ToPILImage()
-        #i = 1;
         self.list1 = []
-        #print(dataset_path1)
         for filename in sorted(os.listdir(dataset_path)):
             file_path = os.path.abspath(os.path.join(dataset_path, filename))
             _, file_extension = os.path.splitext(file_path)
@@ -49,12 +41,6 @@ class SuperTuxDataset(Dataset):
                 self.list1.append(image)
                 image.load()
                 
-
-                
-        #self.data = torch.stack(list1)
-        #list1.clear()
-        #print("loaded succesfully")
-        #print(self.data.shape)
 
         csv_path = os.path.join(dataset_path,"labels.csv")
         with open(csv_path,'r') as dest_f:
