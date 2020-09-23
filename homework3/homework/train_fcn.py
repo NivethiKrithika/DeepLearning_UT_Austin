@@ -50,7 +50,7 @@ def train(args):
             train_label = train_label.to(device)
             output = model(train_data)
             computed_loss = loss(output,train_label.long()).float()
-            train_accu.append(accuracy(output,train_label).detach().cpu()
+            train_accu.append(accuracy(output,train_label).detach().cpu())
             computed_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
