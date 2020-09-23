@@ -91,12 +91,12 @@ class FCN(torch.nn.Module):
         #raise NotImplementedError('FCN.__init__')
     def __init__(self):
         super().__init__()
-        self.first_conv = self.construct_layer(3,32)
-        self.second_conv = self.construct_layer(32,64)
-        self.third_conv = self.construct_layer(64,128)
-        self.first_up_conv = self.up_conv(128,64)
-        self.second_up_conv = self.up_conv(128,32)
-        self.third_up_conv = self.up_conv(64,5)
+        self.first_conv = self.construct_layer(3,64)
+        self.second_conv = self.construct_layer(64,128)
+        self.third_conv = self.construct_layer(128,256)
+        self.first_up_conv = self.up_conv(256,128)
+        self.second_up_conv = self.up_conv(256,64)
+        self.third_up_conv = self.up_conv(128,5)
         
        # layers= []
        # L = [32,64,128]
@@ -164,8 +164,9 @@ class FCN(torch.nn.Module):
               convolution
         """
         raise NotImplementedError('FCN.forward')
-
-
+        
+        
+        
 model_factory = {
     'cnn': CNNClassifier,
     'fcn': FCN,
