@@ -89,7 +89,7 @@ class DenseSuperTuxDataset(Dataset):
     def __init__(self, dataset_path, transform=dense_transforms.ToTensor()):
         from glob import glob
         from os import path
-        transform = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.05, contrast=0, saturation=0, hue=0.05),
+        transform = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
                                                          dense_transforms.RandomHorizontalFlip(),
                                                          dense_transforms.ToTensor(),
                                                          dense_transforms.Normalize(mean = [0.485,0.456,0.406],
