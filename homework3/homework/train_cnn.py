@@ -61,19 +61,8 @@ def train(args):
             output = model(train_data)
             list_output_train.append(output)
             list_label_train.append(train_label)
-            #print(train_data.shape)
-            #print(train_data)
-            #print("output shape is")
-            #print(output.shape)
-            #if(iter > 18):
-              #print("output is")
-              #print(output)
-            
             computed_loss = loss(output,train_label.long()).float()
-            #print("loss type is {}".format(computed_loss.dtype))
-            #print(computed_loss)
-            #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
-            #print("train loss is {} ".format(computed_loss))
+
            
             computed_loss.backward()
             optimizer.step()
