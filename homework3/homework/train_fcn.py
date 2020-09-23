@@ -50,18 +50,7 @@ def train(args):
             train_label = train_label.to(device)
             output = model(train_data)
             computed_loss = loss(output,train_label.long()).float()
-            #list_output_train.append(output)
-            #list_label_train.append(train_label)
-            #print(output.shape)
-            #print(train_label.shape)
-            #accs = accuracy(output,train_label)
-            #print(accs)
-            train_accu.append(accuracy(output,train_label).detach().cpu())
-            #print("loss type is {}".format(computed_loss.dtype))
-            #print(computed_loss)
-            #train_logger.add_scalar('loss',computed_loss,global_step = train_global_step)
-            #print("train loss is {} ".format(computed_loss))
-           
+            train_accu.append(accuracy(output,train_label).detach().cpu()
             computed_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -69,19 +58,8 @@ def train(args):
             del(train_data)
             del(train_label)
 
-        #aggregated_output = torch.cat(list_output_train)
-        #print("aggregated_output is")
-        #print(aggregated_output)
-        #aggregated_label = torch.cat(list_label_train)
-        #del(list_output_train)
-        #del(list_label_train)
-        #print("aggregated_label is")
-        #print(aggregated_label)
-        #train_accu = accuracy(aggregated_output,aggregated_label).float().detach().cpu()
-        #train_logger.add_scalar('accuracy',train_accu,global_step = train_global_step)
         print("train accu is {}".format(np.mean(np.array(train_accu))))
-        #del(aggregated_output)
-        #del(aggregated_label)
+
         
         model.eval()
         with torch.no_grad():
@@ -92,32 +70,7 @@ def train(args):
                 c.add(model(img.to(device)).argmax(1), label.to(device))
             print("global accuracy is {}".format(c.global_accuracy))
             print("iou is {}".format(c.iou))
-            #for i, valid_batch in enumerate(valid_loader):
-                #valid_data,valid_label = valid_batch
-                #valid_data,valid_label = valid_data.to(device), valid_label.to(device)
-                #valid_output = model(valid_data)
-                #valid_output1 = torch.argmax(valid_output,dim = 1)
-                #computed_valid_loss = loss(valid_output,valid_label.long()).float()
-                #valid_logger.add_scalar('loss',computed_valid_loss,global_step = train_global_step)
-                #print("valid loss is {}".format(computed_valid_loss))
-                #list_output_valid.append(valid_output)
-                #list_label_valid.append(valid_label)
 
-            #aggregated_valid_output = torch.cat(list_output_valid)
-            #aggregated_valid_label = torch.cat(list_label_valid)
-            #del(list_output_valid)
-            #del(list_label_valid)
-            #print(aggregated_valid_output.shape)
-            #print(aggregated_valid_label.shape)
-            #conf = ConfusionMatrix()
-            #for i,(img,label) in enumerate(valid_loader,batch_size = 32):
-                #conf.add(torch.argmax(aggregated_valid_output[i]),aggregated_valid_label[i])
-            
-            #accu = accuracy(aggregated_valid_output,aggregated_valid_label).float().detach().cpu()
-            #validation_accuracies.append(accu)
-            #scheduler.step(np.mean(np.array(validation_accuracies),dtype = np.float))
-            #valid_logger.add_scalar('accuracy',accu,global_step = train_global_step)
-            #print("valid accu is {}".format(accu))
 
     """
     Your code here, modify your HW1 / HW2 code
