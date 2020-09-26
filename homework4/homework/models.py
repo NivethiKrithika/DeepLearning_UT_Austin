@@ -3,6 +3,19 @@ import torch.nn.functional as F
 
 
 def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
+    pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
+    print(heatmap.shape)
+    heatmap_mod = heatmap[None,None]
+    print(heatmap_mod.shape)
+    m = pool(heatmap_mod)
+    score = m[0]
+    list2 = []
+    cx,cy = torch.div(m[1],heatmap.shape[1]),m[1]%heatmap.shape[1]
+    for i in range(0,score.size(2)):
+        for j in range(0,score.size(3)):
+            if(score[0][0][i][j] > min_score):
+                list2.append((score[0][0][i][j].item(),cx[0][0][i][j].item(),cy[0][0][i][j].item()))
+    return(list2) 
     """
        Your code here.
        Extract local maxima (peaks) in a 2d heatmap.
