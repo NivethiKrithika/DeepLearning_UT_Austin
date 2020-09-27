@@ -2,9 +2,11 @@ import torch
 import torch.nn.functional as F
 
 
-def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
+def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
+    print(max_pool_ks,max_det)
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
-    #print(heatmap.shape)
+    print(heatmap.shape)
+    print(heatmap)
     heatmap_mod = heatmap[None,None]
     #print(heatmap_mod.shape)
     m = pool(heatmap_mod)
@@ -25,7 +27,29 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
         for j in range(0,score.size(1)):
             if(score[i][j] > min_score):
                 list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
-    return(list_extracted[0:max_det])
+    #print(list_extracted[0:max_det])
+    #return(list_extracted[0:max_det])
+    final_list = [elem for elem in list_extracted]
+    for k in list_extracted:
+        score1 = k[0]
+        cy1 = k[1]
+        cx1 = k[2]
+        #print("cx is {}".format(cx1))
+        #print("cy is {}".format(cy1))
+        for ele in list_extracted:
+            if(cy1-max_pool_ks+1 <= ele[1] <= cy1+max_pool_ks-1):
+                if(cx1-max_pool_ks+1 <= ele[2] <= cx1+max_pool_ks-1):
+                    #print(ele)
+                    if(score1 < ele[0]):
+                        #print("removed {},{}".format(cx1,cy1))
+                        if k in final_list:
+                            final_list.remove(k)
+                            break
+                    elif(score1 > ele[0]):
+                        if ele in final_list:
+                            final_list.remove(ele)
+                        #print("removed {},{}".format(ele[1],ele[2]))
+    return(final_list[0:max_det]) 
 
 
     
