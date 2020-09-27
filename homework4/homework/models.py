@@ -48,7 +48,7 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
                         if ele in final_list:
                             final_list.remove(ele)
                         #print("removed {},{}".format(ele[1],ele[2]))
-    return(final_list) 
+    return(final_list[0:max_det]) 
     """
        Your code here.
        Extract local maxima (peaks) in a 2d heatmap.
