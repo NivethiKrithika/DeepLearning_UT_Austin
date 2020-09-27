@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
-    print(heatmap.shape)
+    #print(heatmap.shape)
     heatmap_mod = heatmap[None,None]
-    print(heatmap_mod.shape)
+    #print(heatmap_mod.shape)
     m = pool(heatmap_mod)
     #print(m[0])
     score = m[0]
@@ -24,43 +24,11 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
     for i in range(0,score.size(0)):
         for j in range(0,score.size(1)):
             if(score[i][j] > min_score):
-                list_extracted.append((score[i][j].item(),cx[i][j].item(),cy[i][j].item()))
-    #print(list_extracted)
+                list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
+    print(list_extracted[0:max_det])
 
 
-    final_list = [elem for elem in list_extracted]
-    for k in list_extracted:
-        score1 = k[0]
-        cx1 = k[1]
-        cy1 = k[2]
-        #print("cx is {}".format(cx1))
-        #print("cy is {}".format(cy1))
-        for ele in list_extracted:
-            if(cx1-max_pool_ks <= ele[1] <= cx1+max_pool_ks):
-                if(cy1-max_pool_ks <= ele[2] <= cy1+max_pool_ks):
-                    #print(ele)
-                    if(score1 < ele[0]):
-                        #print("removed {},{}".format(cx1,cy1))
-                        if k in final_list:
-                            final_list.remove(k)
-                            break
-                    elif(score1 > ele[0]):
-                        if ele in final_list:
-                            final_list.remove(ele)
-                        #print("removed {},{}".format(ele[1],ele[2]))
-    return(final_list[0:max_det]) 
-    """
-       Your code here.
-       Extract local maxima (peaks) in a 2d heatmap.
-       @heatmap: H x W heatmap containing peaks (similar to your training heatmap)
-       @max_pool_ks: Only return points that are larger than a max_pool_ks x max_pool_ks window around the point
-       @min_score: Only return peaks greater than min_score
-       @return: List of peaks [(score, cx, cy), ...], where cx, cy are the position of a peak and score is the
-                heatmap value at the peak. Return no more than max_det peaks per image
-    """
-    raise NotImplementedError('extract_peak')
-
-
+    
 class Detector(torch.nn.Module):
     def __init__(self):
         """
