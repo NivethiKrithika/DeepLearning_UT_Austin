@@ -25,7 +25,7 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=-5, max_det=100):
         for j in range(0,score.size(1)):
             if(score[i][j] > min_score):
                 list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
-    print(list_extracted[0:max_det])
+    return(list_extracted[0:max_det])
 
 
     
