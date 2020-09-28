@@ -32,7 +32,7 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
             if(score[i][j] > min_score):
                 new_matrix = heatmap[wind_sizes[index][0]:wind_sizes[index][2],wind_sizes[index][1]:wind_sizes[index][3]].reshape(1,-1)
                 if(new_matrix.size(1) != 1):
-                    new_matrix = new_matrix.squeeze()1
+                    new_matrix = new_matrix.squeeze()
                 
                 count_ele = new_matrix.tolist().count(score[i][j])
                 m1 = []
