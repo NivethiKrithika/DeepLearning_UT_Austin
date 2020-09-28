@@ -3,54 +3,68 @@ import torch.nn.functional as F
 
 
 def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
-    print(max_pool_ks,max_det)
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
-    print(heatmap.shape)
-    print(heatmap)
     heatmap_mod = heatmap[None,None]
-    #print(heatmap_mod.shape)
     m = pool(heatmap_mod)
-    #print(m[0])
     score = m[0]
-    #print(a.shape[0])
+
     cx,cy = torch.floor_divide(m[1],heatmap.shape[1]), m[1]%heatmap.shape[1] 
     score = torch.squeeze(score)
     cx = torch.squeeze(cx)
     cy = torch.squeeze(cy)
-    #print(cx.shape)
-#print(cx[0,0,0,0])
     list_extracted = []
+    wind_sizes = []
+    for i in range(0,heatmap.size(0),max_pool_ks):
+        win1_cx = i
+        win2_cx = i+max_pool_ks
+        iter = 0
+        win1_cy = 0
+        win2_cy = max_pool_ks
+        for k in range(0,heatmap.size(1),max_pool_ks):
+            win1_cy = k
+            iter = iter +1
+            wind_sizes.append((win1_cx,win1_cy,win2_cx,win2_cy))
+            win2_cy = win2_cy + max_pool_ks
 
-#for i in range(0,m[0].size(3)):
- #       list1.append((m[0][0][0][0][i].item(),cx[0][0][0][i].item(),cy[0][0][0][i].item()))
+    index = 0        
     for i in range(0,score.size(0)):
         for j in range(0,score.size(1)):
             if(score[i][j] > min_score):
-                list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
-    #print(list_extracted[0:max_det])
-    #return(list_extracted[0:max_det])
+                new_matrix = heatmap[wind_sizes[index][0]:wind_sizes[index][2],wind_sizes[index][1]:wind_sizes[index][3]].reshape(1,-1)
+                if(new_matrix.size(1) != 1):
+                    new_matrix = new_matrix.squeeze()1
+                
+                count_ele = new_matrix.tolist().count(score[i][j])
+                m1 = []
+                m2 = []
+                if(count_ele > 1) and (count_ele == max_pool_ks*max_pool_ks):
+                    _,indices = torch.topk(new_matrix,count_ele)
+                    m1 = torch.floor_divide(indices,max_pool_ks)
+                    m2 = indices % max_pool_ks
+                    for s in range(0,len(m2)):
+                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item()))
+                else:    
+                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
+            index = index+1
+    
     final_list = [elem for elem in list_extracted]
     for k in list_extracted:
         score1 = k[0]
         cy1 = k[1]
         cx1 = k[2]
-        #print("cx is {}".format(cx1))
-        #print("cy is {}".format(cy1))
+        if(max_pool_ks == 1):
+            max_pool_ks = 0
         for ele in list_extracted:
-            if(cy1-max_pool_ks+1 <= ele[1] <= cy1+max_pool_ks-1):
-                if(cx1-max_pool_ks+1 <= ele[2] <= cx1+max_pool_ks-1):
-                    #print(ele)
+            if(cy1-max_pool_ks <= ele[1] <= cy1+max_pool_ks):
+                if(cx1-max_pool_ks <= ele[2] <= cx1+max_pool_ks):
                     if(score1 < ele[0]):
-                        #print("removed {},{}".format(cx1,cy1))
                         if k in final_list:
                             final_list.remove(k)
                             break
                     elif(score1 > ele[0]):
                         if ele in final_list:
                             final_list.remove(ele)
-                        #print("removed {},{}".format(ele[1],ele[2]))
     return(final_list[0:max_det]) 
-
 
     
 class Detector(torch.nn.Module):
