@@ -68,21 +68,96 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
 
     
 class Detector(torch.nn.Module):
-    def __init__(self):
-        """
-           Your code here.
-           Setup your detection network
-        """
-        super().__init__()
-        raise NotImplementedError('Detector.__init__')
+   class construct_layer(torch.nn.Module):
+        def __init__(self,in_channels,out_channels):
+            super().__init__()
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU())
+            #self.down_sample = torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = 1)
+        def forward(self,x): 
+            return self.concat_layers(x)
 
-    def forward(self, x):
-        """
-           Your code here.
-           Implement a forward pass through the network, use forward for training,
-           and detect for detection
-        """
-        raise NotImplementedError('Detector.forward')
+    class up_conv(torch.nn.Module):
+        def __init__(self,in_channels,out_channels):
+            super().__init__()  
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU())
+           
+        def forward(self,x): 
+            return self.concat_layers1(x)
+
+       #raise NotImplementedError('FCN.__init__')
+    def __init__(self):
+        super().__init__()
+        self.first_conv = self.construct_layer(3,64)
+        self.second_conv = self.construct_layer(64,128)
+        self.third_conv = self.construct_layer(128,256)
+        self.first_up_conv = self.up_conv(256,128)
+        self.second_up_conv = self.up_conv(256,64)
+        self.third_up_conv = self.up_conv(128,3)
+        
+       # layers= []
+       # L = [32,64,128]
+       # c = 3
+       # for l in L:
+        #    layers.append(self.construct_layer(c,l))
+         #   layers.append(torch.nn.Maxpool2d(2))
+          #  c = l
+        #layers.append(self.up_conv(c,64))
+        
+            
+        self.pool = torch.nn.MaxPool2d(2)
+        #self.final_layers = torch.nn.Sequential(*layers)
+        #self.final = torch.nn.Sequential(*layers1)
+        self.out_conv = torch.nn.Conv2d(32,5,1)
+
+
+        
+    def forward(self,x):
+        padding_done = 0
+        padded_oh = 0
+        padded_ow = 0
+        if x.size(2) < 16 or x.size(3) < 16:
+            padding_done = 1
+            ow, oh = x.size(2),x.size(3)
+            #print(oh)
+            #print(ow)
+            padh = 16 - oh if oh < 16 else 0
+            padw = 16 - ow if ow < 16 else 0
+            padded_ow = ow
+            padded_oh = oh
+            x = R.pad(x, (0, padh,0, padw), value =0)
+        
+        first_res = self.first_conv(x)
+        max_pool_first = self.pool(first_res)
+        #print("max_y shape is {}".format(max_pool_first.shape))
+        
+        second_res =  self.second_conv(max_pool_first)
+        max_pool_sec = self.pool(second_res)
+        #print("max_z shape is {}".format(max_pool_sec.shape))
+        
+        third_res =  self.third_conv(max_pool_sec)       
+        max_pool_third = self.pool(third_res)
+        #print("max_m size is {}".format(max_pool_third.shape))
+        
+        first_up_res = self.first_up_conv(max_pool_third)
+        #print(first_up_res.shape)
+        
+        second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
+        #print ("n shape is {}".format(second_up_res.shape))
+        
+        final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
+        #print("third shape is {}".format(third_up_res.shape))
+        #final = self.out_conv(third_up_res)
+        if padding_done == 1:
+            final = final[:,:,0:padded_ow,0:padded_oh]
+        return final
+
 
     def detect(self, image):
         """
