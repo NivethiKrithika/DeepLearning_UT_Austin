@@ -22,7 +22,7 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 0.1)
+    optimizer = torch.optim.Adam(model.parameters(),lr = 3e-4)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     n_epochs = 20
     train_global_step = 0
