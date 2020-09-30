@@ -32,7 +32,7 @@ def train(args):
     optimizer = torch.optim.Adam(model.parameters(),lr = 0.01)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     #optimizer = torch.optim.SGD(model.parameters(),lr = 0.09,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 4
+    n_epochs = 1
     train_global_step = 0
     loss = torch.nn.BCEWithLogitsLoss()
     #print(optimizer.param_groups[0]['lr'])
@@ -45,7 +45,7 @@ def train(args):
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
         print(optimizer.param_groups[0]['lr'])
-        permutation = torch.randperm(9998)
+        permutation = torch.randperm(60)
         train_accu = []
         model.train()
         for i in range(0,len(permutation)-batch_size+1,batch_size):
