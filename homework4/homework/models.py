@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 
-def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
+def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
     heatmap_mod = heatmap[None,None]
     m = pool(heatmap_mod)
@@ -42,9 +42,9 @@ def extract_peak(heatmap, max_pool_ks=7, min_score=0, max_det=100):
                     m1 = torch.floor_divide(indices,max_pool_ks)
                     m2 = indices % max_pool_ks
                     for s in range(0,len(m2)):
-                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item()))
+                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item(),0,0))
                 else:    
-                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
+                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item(),0,0))
             index = index+1
     
     final_list = [elem for elem in list_extracted]
