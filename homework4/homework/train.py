@@ -45,7 +45,7 @@ def train(args):
                 data =img
                 t_list.append(data)
                 #(*dets1 = batch_data[1]
-                label,train_size = detections_to_heatmap(dets1,img.shape[1:])
+                label,train_size = dense_transforms.detections_to_heatmap(dets1,img.shape[1:])
                 t_label.append(label)
             #print(t_list[0].shape)
             train_data = torch.stack(t_list)
