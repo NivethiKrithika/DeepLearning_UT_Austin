@@ -163,7 +163,7 @@ class Detector(torch.nn.Module):
         return final
 
 
-    def detect(self, image):
+      def detect(self, image):
         y = image[None,:,:,:]
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
@@ -184,9 +184,21 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
+        final1 = final1.squeeze()
         list_1 = extract_peak(final1[0])
+        kart_det = []
+        for ele in list_1:
+            kart_det.append((0,ele[0],ele[1],ele[2],ele[3],ele[4]))
+        bomb_det = []
         list_2 = extract_peak(final1[1])
+        for ele in list_2:
+            bomb_det.append((1,ele[0],ele[1],ele[2],ele[3],ele[4]))
+        pickup_det = []
         list_3 = extract_peak(final1[2])
+        for ele in list_3:
+            pickup_det.append((2,ele[0],ele[1],ele[2],ele[3],ele[4]))
+        
+        return kart_det,bomb_det,pickup_det
         """
            Your code here.
            Implement object detection here.
