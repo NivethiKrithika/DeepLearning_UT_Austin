@@ -163,6 +163,29 @@ class Detector(torch.nn.Module):
 
 
     def detect(self, image):
+        y = image[None,:,:,:]
+        first_res1 = self.first_conv(y)
+        max_pool_first1 = self.pool(first_res1)
+        #print("max_y shape is {}".format(max_pool_first.shape))
+        
+        second_res1 =  self.second_conv(max_pool_first1)
+        max_pool_sec1 = self.pool(second_res1)
+        #print("max_z shape is {}".format(max_pool_sec.shape))
+        
+        third_res1 =  self.third_conv(max_pool_sec1)       
+        max_pool_third1 = self.pool(third_res1)
+        #print("max_m size is {}".format(max_pool_third.shape))
+        
+        first_up_res1 = self.first_up_conv(max_pool_third1)
+        #print(first_up_res.shape)
+        
+        second_up_res1 = self.second_up_conv(torch.cat([first_up_res1,max_pool_sec1],1))
+        #print ("n shape is {}".format(second_up_res.shape))
+        
+        final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
+        list_1 = extract_peak(final[0])
+        list_2 = extract_peak(final[1])
+        list_3 = extract_peak(final[2])
         """
            Your code here.
            Implement object detection here.
@@ -175,7 +198,7 @@ class Detector(torch.nn.Module):
                  scalar. Otherwise pytorch might keep a computation graph in the background and your program will run
                  out of memory.
         """
-        raise NotImplementedError('Detector.detect')
+        #raise NotImplementedError('Detector.detect')
 
 
 def save_model(model):
