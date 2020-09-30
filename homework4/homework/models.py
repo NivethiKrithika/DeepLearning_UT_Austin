@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
 def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
