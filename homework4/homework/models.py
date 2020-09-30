@@ -187,7 +187,7 @@ class Detector(torch.nn.Module):
         
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
         final1 = final1.squeeze()
-        print(final1)
+        #print(final1)
         list_1 = extract_peak(final1[0])
         kart_det = []
         for ele in list_1:
