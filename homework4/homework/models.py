@@ -42,9 +42,9 @@ def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
                     m1 = torch.floor_divide(indices,max_pool_ks)
                     m2 = indices % max_pool_ks
                     for s in range(0,len(m2)):
-                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item(),0,0))
+                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item()))
                 else:    
-                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item(),0,0))
+                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
             index = index+1
     
     final_list = [elem for elem in list_extracted]
@@ -189,15 +189,15 @@ class Detector(torch.nn.Module):
         list_1 = extract_peak(final1[0])
         kart_det = []
         for ele in list_1:
-            kart_det.append((0,ele[0],ele[1],ele[2],ele[3],ele[4]))
+            kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
         list_2 = extract_peak(final1[1])
         for ele in list_2:
-            bomb_det.append((1,ele[0],ele[1],ele[2],ele[3],ele[4]))
+            bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
         list_3 = extract_peak(final1[2])
         for ele in list_3:
-            pickup_det.append((2,ele[0],ele[1],ele[2],ele[3],ele[4]))
+            pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
         return kart_det,bomb_det,pickup_det
         """
