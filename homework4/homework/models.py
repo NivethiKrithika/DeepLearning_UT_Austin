@@ -163,7 +163,7 @@ class Detector(torch.nn.Module):
         return final
 
 
-      def detect(self, image):
+    def detect(self, image):
         y = image[None,:,:,:]
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
