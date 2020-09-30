@@ -33,6 +33,7 @@ def train(args):
                                                                            dense_transforms.ToTensor()]))
     batch_size =32
     for iter in range(n_epochs):
+        print("iter is {}".format(iter))
         permutation = torch.randperm(9998)
         train_accu = []
         model.train()
