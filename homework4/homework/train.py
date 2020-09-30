@@ -5,15 +5,67 @@ from .models import Detector, save_model
 from .utils import load_detection_data
 from . import dense_transforms
 import torch.utils.tensorboard as tb
-
+import os
+dir = os.path.dirname(os.path.abspath("__file__"))
+dataset_path2 = os.path.join(dir,'dense_data','train')
+dataset_path3 = os.path.join(dir,'dense_data','valid')
 
 def train(args):
     from os import path
     model = Detector()
-    train_logger, valid_logger = None, None
-    if args.log_dir is not None:
-        train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
-        valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
+    #train_logger, valid_logger = None, None
+    #if args.log_dir is not None:
+     #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
+      #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
+    model = model.to(device)
+    #train_logger, valid_logger = None, None
+    #if args.log_dir is not None:
+     #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
+      #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
+    optimizer = torch.optim.Adam(model.parameters(),lr = 0.03)
+    #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
+    n_epochs = 20
+    train_global_step = 0
+    loss = torch.nn.BCEWithLogitsLoss()
+    #print(optimizer.param_groups[0]['lr'])
+    dataset = DetectionSuperTuxDataset(dataset_path2,
+                                       transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
+                                                                           dense_transforms.ToTensor()]))
+    batch_size =32
+    for iter in range(n_epochs):
+        permutation = torch.randperm(9998)
+        train_accu = []
+        model.train()
+        for i in range(0,len(permutation)-batch_size+1,batch_size):
+            batch = permutation[i:i+batch_size]
+            t_list =[]
+            t_label = []
+            for j in batch:
+                (img,*dets1) = dataset[j]
+                data =img
+                t_list.append(data)
+                #(*dets1 = batch_data[1]
+                label,train_size = detections_to_heatmap(dets1,img.shape[1:])
+                t_label.append(label)
+            #print(t_list[0].shape)
+            train_data = torch.stack(t_list)
+            train_label = torch.stack(t_label)
+            train_data = train_data.to(device)
+            train_label = train_label.to(device)
+            output = model(train_data)
+            print(output.shape)
+            print(train_label.shape)
+            computed_loss = loss(output,train_label).float()
+            #train_accu.append(accuracy(output,train_label).detach().cpu())
+            computed_loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            train_global_step +=1
+            del(train_data)
+            del(train_label)
+            print(computed_loss)
+
+        print("train accu is {}".format(np.mean(np.array(train_accu))))
 
     """
     Your code here, modify your HW3 code
