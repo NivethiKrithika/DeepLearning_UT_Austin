@@ -23,9 +23,9 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    #optimizer = torch.optim.Adam(model.parameters(),lr = 3e-3)
+    optimizer = torch.optim.Adam(model.parameters(),lr = 0.01)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.09,momentum = 0.9,weight_decay = 1e-3)
+    #optimizer = torch.optim.SGD(model.parameters(),lr = 0.09,momentum = 0.9,weight_decay = 1e-3)
     n_epochs = 10
     train_global_step = 0
     loss = torch.nn.BCEWithLogitsLoss()
@@ -59,10 +59,9 @@ def train(args):
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            #print(output.shape)
-            #print(train_label.shape)
+            tr = torcch.argmax(train_label,dim = 1)
             computed_loss = loss(output,train_label).float()
-            #train_accu.append(accuracy(output,train_label).detach().cpu())
+            train_accu.append(accuracy(output,tr).detach().cpu())
             computed_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -70,8 +69,7 @@ def train(args):
             del(train_data)
             del(train_label)
             print(computed_loss)
-
-        print("train accu is {}".format(np.mean(np.array(train_accu))))
+            print("train accu is {}".format(np.mean(np.array(train_accu))))
 
     """
     Your code here, modify your HW3 code
