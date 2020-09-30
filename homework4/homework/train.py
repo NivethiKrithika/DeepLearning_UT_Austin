@@ -61,7 +61,7 @@ def train(args):
             output = model(train_data)
             #print(output.shape)
             #print(train_label.shape)
-            computed_loss = loss(output,sig_layer(train_label)).float()
+            computed_loss = loss(output,train_label).float()
             #train_accu.append(accuracy(output,train_label).detach().cpu())
             computed_loss.backward()
             optimizer.step()
