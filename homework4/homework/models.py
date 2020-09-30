@@ -5,6 +5,7 @@ import torch.nn.functional as F
 def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
     heatmap_mod = heatmap[None,None]
+    heatmap_mod = heatmap_mod.to(device)
     m = pool(heatmap_mod)
     score = m[0]
 
@@ -186,16 +187,16 @@ class Detector(torch.nn.Module):
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
         final1 = final1.squeeze()
         print(final1)
-        list_1 = extract_peak(final1[0]).to(device)
+        list_1 = extract_peak(final1[0])
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final1[1]).to(device)
+        list_2 = extract_peak(final1[1])
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final1[2]).to(device)
+        list_3 = extract_peak(final1[2])
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
