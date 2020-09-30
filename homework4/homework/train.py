@@ -10,6 +10,12 @@ dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'dense_data','train')
 dataset_path3 = os.path.join(dir,'dense_data','valid')
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+def accuracy(outputs, labels):
+    print(outputs.shape)
+    print(labels.shape)
+    outputs_idx = outputs.max(1)[1].type_as(labels)
+    return outputs_idx.eq(labels).float().mean()
 def train(args):
     sig_layer = torch.nn.Sigmoid()
     from os import path
@@ -59,7 +65,7 @@ def train(args):
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            tr = torcch.argmax(train_label,dim = 1)
+            tr = torch.argmax(train_label,dim = 1)
             computed_loss = loss(output,train_label).float()
             train_accu.append(accuracy(output,tr).detach().cpu())
             computed_loss.backward()
