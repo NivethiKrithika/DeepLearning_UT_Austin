@@ -32,7 +32,7 @@ def train(args):
     optimizer = torch.optim.Adam(model.parameters(),lr = 0.01)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     #optimizer = torch.optim.SGD(model.parameters(),lr = 0.09,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 10
+    n_epochs = 1
     train_global_step = 0
     loss = torch.nn.BCEWithLogitsLoss()
     #print(optimizer.param_groups[0]['lr'])
@@ -78,7 +78,7 @@ def train(args):
             print("train accu is {}".format(np.mean(np.array(train_accu))))
     image, *det = dataset[100+1];
     train_data = image
-    train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
+    #train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
     kart,bomb,pickup = model.detect(train_data)
     print("kart is")
     print(kart)
