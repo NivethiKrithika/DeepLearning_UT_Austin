@@ -9,7 +9,7 @@ import os
 dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'dense_data','train')
 dataset_path3 = os.path.join(dir,'dense_data','valid')
-
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 def train(args):
     from os import path
     model = Detector()
