@@ -184,9 +184,9 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
-        list_1 = extract_peak(final[0])
-        list_2 = extract_peak(final[1])
-        list_3 = extract_peak(final[2])
+        list_1 = extract_peak(final1[0])
+        list_2 = extract_peak(final1[1])
+        list_3 = extract_peak(final1[2])
         """
            Your code here.
            Implement object detection here.
