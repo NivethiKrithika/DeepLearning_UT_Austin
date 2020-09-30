@@ -79,7 +79,7 @@ def train(args):
     image, *det = dataset[100+1];
     train_data = image
     #train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
-    kart,bomb,pickup = model.detect(train_data)
+    kart,bomb,pickup = model.detect(train_data.to(device))
     print("kart is")
     print(kart)
     print("bomb is")
