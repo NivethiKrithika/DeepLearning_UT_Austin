@@ -22,7 +22,7 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 3e-4)
+    optimizer = torch.optim.Adam(model.parameters(),lr = 3e-3)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     n_epochs = 20
     train_global_step = 0
@@ -30,7 +30,9 @@ def train(args):
     #print(optimizer.param_groups[0]['lr'])
     dataset = DetectionSuperTuxDataset(dataset_path2,
                                        transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
-                                                                           dense_transforms.ToTensor()]))
+                                                                           dense_transforms.ToTensor(),
+                                                                           dense_transforms.Normalize(mean = [0.485,0.456,0.406],
+                                                                                        std = [0.229,0.224,0.225])]))
     batch_size =32
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
