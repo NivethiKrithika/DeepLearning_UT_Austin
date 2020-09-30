@@ -45,7 +45,7 @@ def train(args):
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
         print(optimizer.param_groups[0]['lr'])
-        permutation = torch.randperm(9998)
+        permutation = torch.randperm(60)
         train_accu = []
         model.train()
         for i in range(0,len(permutation)-batch_size+1,batch_size):
