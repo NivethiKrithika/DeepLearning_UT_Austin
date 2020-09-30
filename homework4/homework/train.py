@@ -11,6 +11,7 @@ dataset_path2 = os.path.join(dir,'dense_data','train')
 dataset_path3 = os.path.join(dir,'dense_data','valid')
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 def train(args):
+    sig_layer = torch.nn.Sigmoid()
     from os import path
     model = Detector()
     #train_logger, valid_logger = None, None
@@ -60,7 +61,7 @@ def train(args):
             output = model(train_data)
             #print(output.shape)
             #print(train_label.shape)
-            computed_loss = loss(output,train_label).float()
+            computed_loss = loss(output,sig_layer(train_label)).float()
             #train_accu.append(accuracy(output,train_label).detach().cpu())
             computed_loss.backward()
             optimizer.step()
