@@ -76,6 +76,16 @@ def train(args):
             del(train_label)
             print(computed_loss)
             print("train accu is {}".format(np.mean(np.array(train_accu))))
+    image, *det = dataset[100+1];
+    train_data = image
+    train_label, train_size = detections_to_heatmap(det, image.shape[1:])
+    kart,bomb,pickup = model.detect(train_data)
+    print("kart is")
+    print(kart)
+    print("bomb is")
+    print(bomb)
+    print("pickup is")
+    print(pickup)
 
     """
     Your code here, modify your HW3 code
