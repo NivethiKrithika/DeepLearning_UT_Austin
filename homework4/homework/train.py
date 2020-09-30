@@ -22,7 +22,7 @@ def train(args):
     #if args.log_dir is not None:
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 0.03)
+    optimizer = torch.optim.Adam(model.parameters(),lr = 0.09)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     n_epochs = 20
     train_global_step = 0
@@ -53,8 +53,8 @@ def train(args):
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            print(output.shape)
-            print(train_label.shape)
+            #print(output.shape)
+            #print(train_label.shape)
             computed_loss = loss(output,train_label).float()
             #train_accu.append(accuracy(output,train_label).detach().cpu())
             computed_loss.backward()
