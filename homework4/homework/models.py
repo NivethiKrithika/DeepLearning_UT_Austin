@@ -108,16 +108,13 @@ class Detector(torch.nn.Module):
         
         self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,64,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
-                                                    torch.nn.ReLU(),
-                                                     )
+                                                    torch.nn.ReLU())
         self.second_conv_sc =torch.nn.Sequential(torch.nn.Conv2d(64,128,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
-                                                    torch.nn.ReLU(),
-                                                     ))
+                                                    torch.nn.ReLU())
         self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
-                                                    torch.nn.Sigmoid(),
-                                                     )
+                                                    torch.nn.Sigmoid())
       
         
        # layers= []
