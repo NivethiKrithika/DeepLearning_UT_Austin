@@ -12,6 +12,87 @@ dataset_path3 = os.path.join(dir,'dense_data','valid')
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 torch.set_printoptions(profile="full")
 
+def point_in_box(pred, lbl):
+    px, py = pred[:, None, 0], pred[:, None, 1]
+    x0, y0, x1, y1 = lbl[None, :, 0], lbl[None, :, 1], lbl[None, :, 2], lbl[None, :, 3]
+    return (x0 <= px) & (px < x1) & (y0 <= py) & (py < y1)
+
+                                                                                                                                                                                                                                                                                                       
+def point_close(pred, lbl, d=5):
+    px, py = pred[:, None, 0], pred[:, None, 1]
+    x0, y0, x1, y1 = lbl[None, :, 0], lbl[None, :, 1], lbl[None, :, 2], lbl[None, :, 3]
+    return ((x0 + x1 - 1) / 2 - px) ** 2 + ((y0 + y1 - 1) / 2 - py) ** 2 < d ** 2
+
+
+def box_iou(pred, lbl, t=0.5):
+    px, py, pw2, ph2 = pred[:, None, 0], pred[:, None, 1], pred[:, None, 2], pred[:, None, 3]
+    px0, px1, py0, py1 = px - pw2, px + pw2, py - ph2, py + ph2
+    x0, y0, x1, y1 = lbl[None, :, 0], lbl[None, :, 1], lbl[None, :, 2], lbl[None, :, 3]
+    iou = (abs(torch.min(px1, x1) - torch.max(px0, x0)) * abs(torch.min(py1, y1) - torch.max(py0, y0))) / \
+          (abs(torch.max(px1, x1) - torch.min(px0, x0)) * abs(torch.max(py1, y1) - torch.min(py0, y0)))
+    return iou > t
+
+
+
+class PR:
+    def __init__(self, min_size=20, is_close=point_in_box):
+        self.min_size = min_size
+        self.total_det = 0
+        self.det = []
+        self.is_close = is_close
+
+    def add(self, d, lbl):
+        lbl = torch.as_tensor(lbl.astype(float), dtype=torch.float32).view(-1, 4)
+        d = torch.as_tensor(d, dtype=torch.float32).view(-1, 5)
+        all_pair_is_close = self.is_close(d[:, 1:], lbl)
+
+        # Get the box size and filter out small objects
+        sz = abs(lbl[:, 2]-lbl[:, 0]) * abs(lbl[:, 3]-lbl[:, 1])
+
+        # If we have detections find all true positives and count of the rest as false positives
+        if len(d):
+            detection_used = torch.zeros(len(d))
+            # For all large objects
+            for i in range(len(lbl)):
+                if sz[i] >= self.min_size:
+                    # Find a true positive
+                    s, j = (d[:, 0] - 1e10 * detection_used - 1e10 * ~all_pair_is_close[:, i]).max(dim=0)
+                    if not detection_used[j] and all_pair_is_close[j, i]:
+                        detection_used[j] = 1
+                        self.det.append((float(s), 1))
+
+            # Mark any detection with a close small ground truth as used (no not count false positives)
+            detection_used += all_pair_is_close[:, sz < self.min_size].any(dim=1)
+
+            # All other detections are false positives
+            for s in d[detection_used == 0, 0]:
+                self.det.append((float(s), 0))
+
+        # Total number of detections, used to count false negatives
+        self.total_det += int(torch.sum(sz >= self.min_size))
+
+
+    @property
+    def curve(self):
+        true_pos, false_pos = 0, 0
+        r = []
+        for t, m in sorted(self.det, reverse=True):
+            if m:
+                true_pos += 1
+            else:
+                false_pos += 1
+            prec = true_pos / (true_pos + false_pos)
+            recall = true_pos / self.total_det
+            r.append((prec, recall))
+        return r
+
+    @property
+    def average_prec(self, n_samples=11):
+        import numpy as np
+        pr = np.array(self.curve, np.float32)
+        return np.mean([np.max(pr[pr[:, 1] >= t, 0], initial=0) for t in np.linspace(0, 1, n_samples)])
+
+
 def accuracy(outputs, labels):
     print(outputs.shape)
     print(labels.shape)
@@ -75,8 +156,48 @@ def train(args):
             train_global_step +=1
             del(train_data)
             del(train_label)
-            print(computed_loss)
-            print("train accu is {}".format(np.mean(np.array(train_accu))))
+            
+            
+            model.eval()
+         #   print("train accu is {}".format(np.mean(np.array(train_accu))))
+          #  image, *det = dataset[100+i];
+           # train_data = image
+           # train_label, train_size = detections_to_heatmap(det, image.shape[1:])
+           # kart,bomb,pickup = model.detect(train_data)
+            #print("kart is")
+            #print(kart)
+            #print("bomb is")
+            #print(bomb)
+            #print("pickup is")
+            #print(pickup)
+            pr_box = [PR() for _ in range(3)]
+            pr_dist = [PR(is_close=point_close) for _ in range(3)]
+            pr_iou = [PR(is_close=box_iou) for _ in range(3)]
+            p = 0
+            for img, *gts in DetectionSuperTuxDataset(dataset_path3, min_size=0):
+                p = p+1
+                with torch.no_grad():
+                    detections = model.detect(img.to(device))
+                    print(len(detections[0]))
+                    print(len(detections[1]))
+                    print(len(detections[2]))
+                    
+                    for i, gt in enumerate(gts):
+                        pr_box[i].add(detections[i], gt)
+                        pr_dist[i].add(detections[i], gt)
+                        pr_iou[i].add(detections[i], gt)
+                if(p == 3):
+                    break
+                #pr_box[0] = []
+                #pr_box[1] = []
+                #pr_box[2] = []
+            ap = pr_box[0].average_prec
+            print("ap is {}".format(ap))
+            ap1 = pr_box[1].average_prec
+            print("ap 2 is {}".format(ap1))
+            ap2 = pr_box[2].average_prec
+            print("ap 3 is {}".format(ap2))
+            
     image, *det = dataset[100+1];
     train_data = image
     #train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
