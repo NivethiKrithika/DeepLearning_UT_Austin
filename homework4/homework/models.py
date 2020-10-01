@@ -130,8 +130,8 @@ class Detector(torch.nn.Module):
         #layers.append(self.up_conv(c,64))
         
             
-        self.pool = torch.nn.MaxPool2d(2)
-        self.pool_reduce = torch.nn.MaxPool2d(4)
+        self.pool = torch.nn.AvgPool2d(2)
+        self.pool_reduce = torch.nn.AvgPool2d(4)
         #self.final_layers = torch.nn.Sequential(*layers)
         #self.final = torch.nn.Sequential(*layers1)
         self.out_conv = torch.nn.Conv2d(32,5,1)
