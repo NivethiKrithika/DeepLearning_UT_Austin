@@ -94,8 +94,8 @@ class PR:
 
 
 def accuracy(outputs, labels):
-    print(outputs.shape)
-    print(labels.shape)
+    #print(outputs.shape)
+    #print(labels.shape)
     outputs_idx = outputs.max(1)[1].type_as(labels)
     return outputs_idx.eq(labels).float().mean()
 def train(args):
@@ -178,25 +178,28 @@ def train(args):
                 p = p+1
                 with torch.no_grad():
                     detections = model.detect(img.to(device))
-                    print(len(detections[0]))
-                    print(len(detections[1]))
-                    print(len(detections[2]))
+                    #print(len(detections[0]))
+                    #print(len(detections[1]))
+                    #print(len(detections[2]))
                     
                     for i, gt in enumerate(gts):
                         pr_box[i].add(detections[i], gt)
                         pr_dist[i].add(detections[i], gt)
                         pr_iou[i].add(detections[i], gt)
-                if(p == 3):
+                if(p == 10):
                     break
                 #pr_box[0] = []
                 #pr_box[1] = []
                 #pr_box[2] = []
-            ap = pr_box[0].average_prec
-            print("ap is {}".format(ap))
-            ap1 = pr_box[1].average_prec
-            print("ap 2 is {}".format(ap1))
-            ap2 = pr_box[2].average_prec
-            print("ap 3 is {}".format(ap2))
+            if(len(pr_box[0].det) >0):
+                ap = pr_box[0].average_prec
+                print("ap is {}".format(ap))
+            if(len(pr_box[1].det) >0):
+                ap1 = pr_box[1].average_prec
+                print("ap 2 is {}".format(ap1))
+            if(len(pr_box[2].det) >0):
+                ap2 = pr_box[2].average_prec
+                print("ap 3 is {}".format(ap2))
             
     image, *det = dataset[100+1];
     train_data = image
