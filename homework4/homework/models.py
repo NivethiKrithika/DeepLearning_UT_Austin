@@ -108,10 +108,10 @@ class Detector(torch.nn.Module):
         
         self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,128,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(128),
-                                                    torch.nn.ReLU())
+                                                    torch.nn.LeakyReLU(negative_slope = 0.1,inplace = True))
         self.second_conv_sc =torch.nn.Sequential(torch.nn.Conv2d(128,128,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(128),
-                                                    torch.nn.ReLU())
+                                                    torch.nn.LeakyReLU(negative_slope = 0.1,inplace = True))
         self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
                                                     torch.nn.Sigmoid())
