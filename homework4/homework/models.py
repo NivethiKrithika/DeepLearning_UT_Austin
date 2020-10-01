@@ -106,13 +106,13 @@ class Detector(torch.nn.Module):
                                                    # torch.nn.BatchNorm2d(3),
                                                     # torch.nn.Sigmoid())
         
-        self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,64,7,padding = 3,stride =1),
-                                                    torch.nn.BatchNorm2d(64),
+        self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,3,7,padding = 3,stride =1),
+                                                    torch.nn.BatchNorm2d(3),
                                                     torch.nn.ReLU())
-        self.second_conv_sc =torch.nn.Sequential(torch.nn.Conv2d(64,128,7,padding = 3,stride =1),
-                                                    torch.nn.BatchNorm2d(128),
+        self.second_conv_sc =torch.nn.Sequential(torch.nn.Conv2d(3,3,7,padding = 3,stride =1),
+                                                    torch.nn.BatchNorm2d(3),
                                                     torch.nn.ReLU())
-        self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
+        self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,3,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
                                                     torch.nn.Sigmoid())
       
@@ -211,18 +211,29 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
-        final1 = final1.squeeze()
-        print(final1)
-        list_1 = extract_peak(final1[0])
+        pool_sc1 =self.pool_reduce(final1)
+        #print("shape after pooling is {}".format(pool_sc.shape))
+        first_sc1 = self.first_conv_sc(pool_sc1)
+        #print("shape after first sc is {}".format(first_sc.shape))
+        second_sc1 = self.second_conv_sc(first_sc1)
+        #print("shape after second sc is {}".format(second_sc.shape))
+        third_sc1 = self.third_conv_sc(second_sc1)
+        #print("shape after third sc is {}".format(third_sc.shape))
+        final_sc1= self.upsample(third_sc1)
+        #print("shape after upsampling is {}".format(final_sc.shape))
+        final_final1 = final_sc1 * final1
+        final1_final1 = final1_final1.squeeze()
+        print(final1_final1)
+        list_1 = extract_peak(final1_final1[0])
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final1[1])
+        list_2 = extract_peak(final1_final1[1])
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final1[2])
+        list_3 = extract_peak(final1_final1[2])
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
