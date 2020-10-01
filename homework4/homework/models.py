@@ -101,19 +101,22 @@ class Detector(torch.nn.Module):
         self.third_conv = self.construct_layer(128,256,3,1)
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
-        #self.third_up_conv = self.up_conv(128,3)
-        self.third_up_conv = torch.nn.Sequential(torch.nn.ConvTranspose2d(128,3,3,padding = 1,stride =2,output_padding = 1),
+        self.third_up_conv = self.up_conv(128,3)
+        #self.third_up_conv = torch.nn.Sequential(torch.nn.ConvTranspose2d(128,3,3,padding = 1,stride =2,output_padding = 1),
                                                     torch.nn.BatchNorm2d(3),
                                                      torch.nn.Sigmoid())
         
-        self.first_conv_sc = self.construct_layer(3,64,7,3)
-        self.second_conv_sc =self.construct_layer(64,128,7,3)
-        self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
+        self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,64,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
                                                     torch.nn.ReLU(),
-                                                    torch.nn.Conv2d(3,3,7,padding =3,stride = 1),
+                                                     )
+        self.second_conv_sc =torch.nn.Sequential(torch.nn.Conv2d(64,128,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
-                                                    torch.nn.Sigmoid()
+                                                    torch.nn.ReLU(),
+                                                     ))
+        self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
+                                                    torch.nn.BatchNorm2d(3),
+                                                    torch.nn.Sigmoid(),
                                                      )
       
         
