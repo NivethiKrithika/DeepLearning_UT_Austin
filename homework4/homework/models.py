@@ -225,18 +225,18 @@ class Detector(torch.nn.Module):
         final_sc1= self.upsample(third_sc1)
         #print("shape after upsampling is {}".format(final_sc.shape))
         final_final1 = final_sc1 * final1
-        final1_final1 = final1_final1.squeeze()
-        print(final1_final1)
-        list_1 = extract_peak(final1_final1[0])
+        final_final1 = final_final1.squeeze()
+        print(final_final1)
+        list_1 = extract_peak(final_final1[0])
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final1_final1[1])
+        list_2 = extract_peak(final_final1[1])
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final1_final1[2])
+        list_3 = extract_peak(final_final1[2])
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
