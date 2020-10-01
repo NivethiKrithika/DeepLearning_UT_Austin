@@ -71,12 +71,12 @@ def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
     
 class Detector(torch.nn.Module):
     class construct_layer(torch.nn.Module):
-        def __init__(self,in_channels,out_channels):
+        def __init__(self,in_channels,out_channels,kernel_size,pad):
             super().__init__()
-            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,kernel_size,padding = pad,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
-                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.Conv2d(out_channels,out_channels,kernel_size,padding = pad,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
             #self.down_sample = torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = 1)
