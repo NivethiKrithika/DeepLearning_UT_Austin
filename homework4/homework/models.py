@@ -160,9 +160,9 @@ class Detector(torch.nn.Module):
         #print("max_z shape is {}".format(max_pool_sec.shape))
         
         third_res =  self.third_conv(max_pool_sec)
-        print("third_res is {}".format(third_res.shape))
+        #print("third_res is {}".format(third_res.shape))
         max_pool_third = self.pool(third_res)
-        print("max_m size is {}".format(max_pool_third.shape))
+        #print("max_m size is {}".format(max_pool_third.shape))
         
         first_up_res = self.first_up_conv(max_pool_third)
         print(first_up_res.shape)
@@ -171,13 +171,13 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
-        
+        print("final is {}".format(final.shape))
         pool_sc =self.pool_reduce(final)
-        #print("shape after pooling is {}".format(pool_sc.shape))
+        print("shape after pooling is {}".format(pool_sc.shape))
         first_sc = self.first_conv_sc(pool_sc)
-        #print("shape after first sc is {}".format(first_sc.shape))
+        print("shape after first sc is {}".format(first_sc.shape))
         second_sc = self.second_conv_sc(first_sc)
-        #print("shape after second sc is {}".format(second_sc.shape))
+        print("shape after second sc is {}".format(second_sc.shape))
         third_sc = self.third_conv_sc(second_sc)
         #print("shape after third sc is {}".format(third_sc.shape))
         final_sc= self.upsample(third_sc)
