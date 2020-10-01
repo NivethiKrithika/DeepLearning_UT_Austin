@@ -156,10 +156,10 @@ def train(args):
             train_global_step +=1
             del(train_data)
             del(train_label)
-            
-            
+            print(computed_loss)
+            print("train accu is {}".format(np.mean(np.array(train_accu))))
             model.eval()
-         #   print("train accu is {}".format(np.mean(np.array(train_accu))))
+            
           #  image, *det = dataset[100+i];
            # train_data = image
            # train_label, train_size = detections_to_heatmap(det, image.shape[1:])
