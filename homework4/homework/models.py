@@ -103,8 +103,8 @@ class Detector(torch.nn.Module):
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,3)
         #self.third_up_conv = torch.nn.Sequential(torch.nn.ConvTranspose2d(128,3,3,padding = 1,stride =2,output_padding = 1),
-                                                    torch.nn.BatchNorm2d(3),
-                                                     torch.nn.Sigmoid())
+                                                   # torch.nn.BatchNorm2d(3),
+                                                    # torch.nn.Sigmoid())
         
         self.first_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(3,64,7,padding = 3,stride =1),
                                                     torch.nn.BatchNorm2d(3),
