@@ -96,9 +96,9 @@ class Detector(torch.nn.Module):
        #raise NotImplementedError('FCN.__init__')
     def __init__(self):
         super().__init__()
-        self.first_conv = self.construct_layer(3,64)
-        self.second_conv = self.construct_layer(64,128)
-        self.third_conv = self.construct_layer(128,256)
+        self.first_conv = self.construct_layer(3,64,3,1)
+        self.second_conv = self.construct_layer(64,128,3,1)
+        self.third_conv = self.construct_layer(128,256,3,1)
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
         #self.third_up_conv = self.up_conv(128,3)
