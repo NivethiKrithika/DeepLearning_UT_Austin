@@ -106,6 +106,17 @@ class Detector(torch.nn.Module):
                                                     torch.nn.BatchNorm2d(3),
                                                      torch.nn.Sigmoid())
         
+        self.first_conv_sc = self.construct_layer(3,64,7,3)
+        self.second_conv_sc =self.construct_layer(64,128,7,3)
+        self.third_conv_sc = torch.nn.Sequential(torch.nn.Conv2d(128,3,7,padding = 3,stride =1),
+                                                    torch.nn.BatchNorm2d(3),
+                                                    torch.nn.ReLU(),
+                                                    torch.nn.Conv2d(3,3,7,padding =3,stride = 1),
+                                                    torch.nn.BatchNorm2d(3),
+                                                    torch.nn.Sigmoid()
+                                                     )
+      
+        
        # layers= []
        # L = [32,64,128]
        # c = 3
@@ -117,9 +128,11 @@ class Detector(torch.nn.Module):
         
             
         self.pool = torch.nn.MaxPool2d(2)
+        self.pool_reduce = torch.nn.MaxPool2d(4)
         #self.final_layers = torch.nn.Sequential(*layers)
         #self.final = torch.nn.Sequential(*layers1)
         self.out_conv = torch.nn.Conv2d(32,5,1)
+        self.upsample = torch.nn.Upsample(scale_factor = 4, mode = 'bicubic')
 
 
         
@@ -157,11 +170,23 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
+        
+        pool_sc =self.pool_reduce(final)
+        #print("shape after pooling is {}".format(pool_sc.shape))
+        first_sc = self.first_conv_sc(pool_sc)
+        #print("shape after first sc is {}".format(first_sc.shape))
+        second_sc = self.second_conv_sc(first_sc)
+        #print("shape after second sc is {}".format(second_sc.shape))
+        third_sc = self.third_conv_sc(second_sc)
+        #print("shape after third sc is {}".format(third_sc.shape))
+        final_sc= self.upsample(third_sc)
+        #print("shape after upsampling is {}".format(final_sc.shape))
+        final_final = final_sc * final
         #print("third shape is {}".format(third_up_res.shape))
         #final = self.out_conv(third_up_res)
         if padding_done == 1:
-            final = final[:,:,0:padded_ow,0:padded_oh]
-        return final
+            final_final = final_final[:,:,0:padded_ow,0:padded_oh]
+        return final_final
 
 
     def detect(self, image):
