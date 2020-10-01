@@ -159,7 +159,8 @@ class Detector(torch.nn.Module):
         max_pool_sec = self.pool(second_res)
         #print("max_z shape is {}".format(max_pool_sec.shape))
         
-        third_res =  self.third_conv(max_pool_sec)       
+        third_res =  self.third_conv(max_pool_sec)
+        print("third_res is {}".format(third_res))
         max_pool_third = self.pool(third_res)
         print("max_m size is {}".format(max_pool_third.shape))
         
