@@ -120,9 +120,8 @@ def train(args):
     #print(optimizer.param_groups[0]['lr'])
     dataset = DetectionSuperTuxDataset(dataset_path2,
                                        transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
-                                                                           dense_transforms.ToTensor(),
-                                                                           dense_transforms.Normalize(mean = [0.485,0.456,0.406],
-                                                                                        std = [0.229,0.224,0.225])]))
+                                                                           dense_transforms.ToTensor()])
+                                                                           
     batch_size =32
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
@@ -174,10 +173,10 @@ def train(args):
             pr_dist = [PR(is_close=point_close) for _ in range(3)]
             pr_iou = [PR(is_close=box_iou) for _ in range(3)]
             p = 0
-            for img, *gts in DetectionSuperTuxDataset(dataset_path3, min_size=0):
+            for img, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
                 p = p+1
                 with torch.no_grad():
-                    detections = model.detect(img.to(device))
+                    detections = model.detect(img.to(device),0)
                     #print(len(detections[0]))
                     #print(len(detections[1]))
                     #print(len(detections[2]))
@@ -204,7 +203,7 @@ def train(args):
     image, *det = dataset[100+1];
     train_data = image
     #train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
-    kart,bomb,pickup = model.detect(train_data.to(device))
+    kart,bomb,pickup = model.detect(train_data.to(device),1)
     print("kart is")
     print(kart)
     print("bomb is")
