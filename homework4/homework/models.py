@@ -193,7 +193,7 @@ class Detector(torch.nn.Module):
         return final_final
 
 
-    def detect(self, image):
+    def detect(self, image,to_print):
         y = image[None,:,:,:]
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
@@ -226,7 +226,8 @@ class Detector(torch.nn.Module):
         #print("shape after upsampling is {}".format(final_sc.shape))
         final_final1 = final_sc1 * final1
         final_final1 = final_final1.squeeze()
-        print(final_final1)
+        if(to_print == 1):
+            print(final_final1)
         list_1 = extract_peak(final_final1[0])
         kart_det = []
         for ele in list_1:
