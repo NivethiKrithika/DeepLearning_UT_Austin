@@ -128,8 +128,9 @@ def train(args):
         print(optimizer.param_groups[0]['lr'])
         permutation = torch.randperm(9998)
         train_accu = []
-        model.train()
+        
         for i in range(0,len(permutation)-batch_size+1,batch_size):
+            model.train()
             batch = permutation[i:i+batch_size]
             t_list =[]
             t_label = []
