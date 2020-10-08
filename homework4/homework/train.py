@@ -108,19 +108,23 @@ def train(args):
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     model = model.to(device)
     #train_logger, valid_logger = None, None
-    #if args.log_dir is not None:
-     #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
-      #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 3e-3)
+    if args.log_dir is not None:
+        train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
+        valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
+    #optimizer = torch.optim.Adam(model.parameters(),lr = 1e-6)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
-    #optimizer = torch.optim.SGD(model.parameters(),lr = 0.09,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 1
+    optimizer = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
+    n_epochs = 3
     train_global_step = 0
-    loss = torch.nn.BCEWithLogitsLoss()
+    #loss = torch.nn.BCEWithLogitsLoss()
+    fl = FocalLoss()
     #print(optimizer.param_groups[0]['lr'])
-    dataset = DetectionSuperTuxDataset(dataset_path2,min_size = 0)
-                                                                           
-    batch_size =32
+    dataset = DetectionSuperTuxDataset(dataset_path2,
+                                       transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
+                                                                           dense_transforms.ToTensor()]),min_size = 0)
+                                                                          
+    batch_size = 32
+    run = 0
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
         print(optimizer.param_groups[0]['lr'])
@@ -128,6 +132,7 @@ def train(args):
         train_accu = []
         
         for i in range(0,len(permutation)-batch_size+1,batch_size):
+            run = run+1
             model.train()
             batch = permutation[i:i+batch_size]
             t_list =[]
@@ -145,9 +150,11 @@ def train(args):
             train_data = train_data.to(device)
             train_label = train_label.to(device)
             output = model(train_data)
-            tr = torch.argmax(train_label,dim = 1)
-            computed_loss = loss(output,train_label).float()
-            train_accu.append(accuracy(output,tr).detach().cpu())
+            #tr = torch.argmax(train_label,dim = 1)
+            #computed_loss = fl(output,train_label).float()
+            computed_loss =  fl(output,train_label).float()
+            #fl(output,train_label).float()
+            #train_accu.append(accuracy(output,tr).detach().cpu())
             computed_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -155,8 +162,10 @@ def train(args):
             del(train_data)
             del(train_label)
             print(computed_loss)
-            print("train accu is {}".format(np.mean(np.array(train_accu))))
-            model.eval()
+            if(run%50 == 0):
+                log(train_logger,train_data,train_label,output,train_global_step)
+            #print("train accu is {}".format(np.mean(np.array(train_accu))))
+            
             
           #  image, *det = dataset[100+i];
            # train_data = image
@@ -168,45 +177,73 @@ def train(args):
             #print(bomb)
             #print("pickup is")
             #print(pickup)
-            pr_box = [PR() for _ in range(3)]
-            pr_dist = [PR(is_close=point_close) for _ in range(3)]
-            pr_iou = [PR(is_close=box_iou) for _ in range(3)]
-            p = 0
-            for img, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
-                p = p+1
-                with torch.no_grad():
-                    detections = model.detect(img.to(device),0)
+            model.eval()
+            run = run+1
+            if(run %40 == 0):
+                
+                pr_box = [PR() for _ in range(3)]
+                pr_dist = [PR(is_close=point_close) for _ in range(3)]
+                pr_iou = [PR(is_close=box_iou) for _ in range(3)]
+                p = 0
+                for img, *gts in DetectionSuperTuxDataset(dataset_path2,transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
+                                                                           dense_transforms.ToTensor()]), min_size=0):
+                    p = p+1
+                    with torch.no_grad():
+                        detections = model.detect(img.to(device),0)
                     #print(len(detections[0]))
                     #print(len(detections[1]))
                     #print(len(detections[2]))
                     
-                    for i, gt in enumerate(gts):
-                        pr_box[i].add(detections[i], gt)
-                        pr_dist[i].add(detections[i], gt)
-                        pr_iou[i].add(detections[i], gt)
-                if(p == 10):
-                    break
+                        for i, gt in enumerate(gts):
+                            pr_box[i].add(detections[i], gt)
+                            pr_dist[i].add(detections[i], gt)
+                            pr_iou[i].add(detections[i], gt)
+                    if(p == 10):
+                        break
                 #pr_box[0] = []
                 #pr_box[1] = []
                 #pr_box[2] = []
-            if(len(pr_box[0].det) >0):
-                ap = pr_box[0].average_prec
-                print("ap is {}".format(ap))
-            if(len(pr_box[1].det) >0):
-                ap1 = pr_box[1].average_prec
-                print("ap 2 is {}".format(ap1))
-            if(len(pr_box[2].det) >0):
-                ap2 = pr_box[2].average_prec
-                print("ap 3 is {}".format(ap2))
+                with torch.no_grad():
+                    if(len(pr_box[0].det) >0):
+                        ap = pr_box[0].average_prec
+                        print("ap is {}".format(ap))
+                    if(len(pr_box[1].det) >0):
+                        ap1 = pr_box[1].average_prec
+                        print("ap 2 is {}".format(ap1))
+                    if(len(pr_box[2].det) >0):
+                        ap2 = pr_box[2].average_prec
+                        print("ap 3 is {}".format(ap2))
+                    if(len(pr_dist[0].det) >0):
+                        dist0 = pr_dist[0].average_prec
+                        print("dist 1 is {}".format(dist0))
+                    if(len(pr_dist[1].det) >0):
+                        dist1 = pr_dist[1].average_prec
+                        print("dist 2 is {}".format(dist1))
+                    if(len(pr_dist[2].det) >0):
+                        dist2 = pr_dist[2].average_prec
+                        print("dist 3 is {}".format(dist2))
+                    if(len(pr_iou[0].det) >0):
+                        iou1 = pr_iou[0].average_prec
+                        print("iou 1 is {}".format(iou1))
+                    if(len(pr_iou[1].det) >0):
+                        iou2 = pr_iou[1].average_prec
+                        print("iou 2 is {}".format(iou2))
+                    if(len(pr_iou[2].det) >0):
+                        iou3 = pr_iou[2].average_prec
+                        print("iou 3 is {}".format(iou3))
+                #print("alpha is ".format(fl.alpha))
+                #print("gamma is ".format(fl.gamma))
+
             
-    image, *det = dataset[100+1];
-    #train_data1 = image
+    model.eval()        
+    image2, *det2 = dataset[100+1];
+    #train_data2 = image2
     #transform1 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
-     #                                                   dense_transforms.RandomHorizontalFlip(),
-      #                                                  dense_transforms.ToTensor()])
+                                                        #dense_transforms.RandomHorizontalFlip(),
+                                                        #dense_transforms.ToTensor()])
     #train_label, train_size = dense_transforms.detections_to_heatmap(det, image.shape[1:])
-    #train_data1 = transform1(train_data1)
-    kart,bomb,pickup = model.detect(image.to(device),1)
+    #train_data2 = transform1(2)
+    kart,bomb,pickup = model.detect(image2.to(device),1)
     print("kart is")
     print(kart)
     print("bomb is")
