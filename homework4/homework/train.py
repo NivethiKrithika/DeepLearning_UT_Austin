@@ -91,6 +91,18 @@ class PR:
         import numpy as np
         pr = np.array(self.curve, np.float32)
         return np.mean([np.max(pr[pr[:, 1] >= t, 0], initial=0) for t in np.linspace(0, 1, n_samples)])
+    class FocalLoss(torch.nn.Module):
+    def __init__(self, alpha=0.10, gamma=2):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        #self.reduce1 = reduce1
+
+    def forward(self, inputs, targets):
+        BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-BCE_loss) # prevents nans when probability 0
+        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
+        return F_loss.mean()
 
 
 def accuracy(outputs, labels):
