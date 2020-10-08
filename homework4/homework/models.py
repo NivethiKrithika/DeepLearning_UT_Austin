@@ -86,9 +86,13 @@ class FCN(torch.nn.Module):
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()  
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
-                                                     torch.nn.BatchNorm2d(out_channels),
-                                                     torch.nn.ReLU())
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
+                                                      torch.nn.Conv2d(in_channels, out_channels, kernel_size=1),
+                                                      torch.nn.BatchNorm2d(out_channels),
+                                                      torch.nn.ReLU())
+            #self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
+             #                                        torch.nn.BatchNorm2d(out_channels),
+              #                                       torch.nn.ReLU())
            
         def forward(self,x): 
             return self.concat_layers1(x)
