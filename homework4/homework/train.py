@@ -118,9 +118,7 @@ def train(args):
     train_global_step = 0
     loss = torch.nn.BCEWithLogitsLoss()
     #print(optimizer.param_groups[0]['lr'])
-    dataset = DetectionSuperTuxDataset(dataset_path2,
-                                       transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
-                                                                           dense_transforms.ToTensor()])
+    dataset = DetectionSuperTuxDataset(dataset_path2,min_size = 0)
                                                                            
     batch_size =32
     for iter in range(n_epochs):
