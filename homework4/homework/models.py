@@ -103,7 +103,7 @@ class FCN(torch.nn.Module):
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,5)
         self.pool = torch.nn.MaxPool2d(2)
-        self.sug_layer =torch.nn.Sigmoid()
+        self.sig_layer =torch.nn.Sigmoid()
 
     def forward(self,x):
         padding_done = 0
@@ -161,16 +161,16 @@ class FCN(torch.nn.Module):
         final_final1 = final_final1.squeeze()
         if(to_print == 1):
             print(final_final1)
-        list_1 = extract_peak(final_final1[0])
+        list_1 = extract_peak(final_final1[0],min_score = 0.5)
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final_final1[1])
+        list_2 = extract_peak(final_final1[1],min_score = 0.5)
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final_final1[2])
+        list_3 = extract_peak(final_final1[2], min_score = 0.5)
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
