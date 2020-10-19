@@ -4,7 +4,7 @@ import torchvision
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
-def extract_peak4(heatmap, max_pool_ks=8, min_score=0, max_det=30):
+def extract_peak(heatmap, max_pool_ks=8, min_score=0, max_det=30):
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices =True) 
     if(max_pool_ks == 1):
         max_pool_ks = 0
@@ -97,7 +97,7 @@ class Detector(torch.nn.Module):
         self.batch_norm = torch.nn.BatchNorm2d(3)
         self.relu = torch.nn.ReLU()
         self.transform3 = torchvision.torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
-                                                                       std = [0.229,0.224,0.225])])
+                                                                       std = [0.229,0.224,0.225])
 
     def forward(self,x):
         mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
