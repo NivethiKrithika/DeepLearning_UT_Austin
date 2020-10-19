@@ -3,73 +3,52 @@ import torch.nn.functional as F
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
-def extract_peak(heatmap, max_pool_ks=4, min_score=0, max_det=30):
-    pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices = True)
-    heatmap_mod = heatmap[None,None]
-    heatmap_mod = heatmap_mod.to(device)
-    m = pool(heatmap_mod)
-    score = m[0]
+def extract_peak4(heatmap, max_pool_ks=8, min_score=0, max_det=30):
+    pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices =True) 
+    if(max_pool_ks == 1):
+        max_pool_ks = 0
+    max_pool_ks1 = torch.Tensor(1).to(device)
+    max_pool_ks1[0] = max_pool_ks
+    k = heatmap[None,None].float().to(device)
+    score = pool(k)[0].to(device)
+    cx,cy = torch.floor_divide(pool(k)[1],heatmap.shape[1]).to(device), (pool(k)[1]%heatmap.shape[1]).to(device)
 
-    cx,cy = torch.floor_divide(m[1],heatmap.shape[1]), m[1]%heatmap.shape[1] 
-    score = torch.squeeze(score)
-    cx = torch.squeeze(cx)
-    cy = torch.squeeze(cy)
-    list_extracted = []
-    wind_sizes = []
-    for i in range(0,heatmap.size(0),max_pool_ks):
-        win1_cx = i
-        win2_cx = i+max_pool_ks
-        iter = 0
-        win1_cy = 0
-        win2_cy = max_pool_ks
-        for k in range(0,heatmap.size(1),max_pool_ks):
-            win1_cy = k
-            iter = iter +1
-            wind_sizes.append((win1_cx,win1_cy,win2_cx,win2_cy))
-            win2_cy = win2_cy + max_pool_ks
+    score_f = torch.squeeze(torch.squeeze(score).float().view(1,-1)).to(device)
+    cx1_f = torch.squeeze(torch.squeeze(cx).float().view(1,-1)).to(device)
+    cy1_f = torch.squeeze(torch.squeeze(cy).float().view(1,-1)).to(device)
+    points = torch.ones(cx1_f.shape).to(device)
+    points = score_f > min_score
+    score_f = score_f[points].to(device)
+    cx1_f = cx1_f[points].to(device)
+    cy1_f = cy1_f[points].to(device)
+    points2 = torch.ones(cx1_f.shape).to(device)
+    points3 = torch.ones(cx1_f.shape).to(device)
+    points5 = torch.ones(cx1_f.shape).to(device)
+    points6 = torch.ones(cx1_f.shape).to(device)
+    cy_minus = torch.max(cy1_f - max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cy_minus[cy_minus > heatmap.size(1)-1] = heatmap.size(1)-1
+    cy_plus = torch.max(cy1_f + max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cy_plus[cy_plus > heatmap.size(1)-1] = heatmap.size(1)-1
+    cx_minus = torch.max(cx1_f - max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cx_minus[cx_minus > heatmap.size(0)-1] = heatmap.size(0)-1
+    cx_plus = torch.max(cx1_f + max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cx_plus[cx_plus > heatmap.size(0)-1] = heatmap.size(0)-1
+    points2 = (cy_minus <= cy1_f).to(device)
+    points5 = (cy1_f <= cy_plus).to(device)
+    points3 = (cx_minus <= cx1_f).to(device)
+    points6 = (cx1_f <= cx_plus).to(device)
+    matrix = torch.Tensor().to(device)
+    for cx_minuse,cx_pluse,cy_minuse,cy_pluse in zip(cx_minus,cx_plus,cy_minus,cy_plus):
+        matrix = torch.cat((matrix,torch.topk(heatmap[cx_minuse:cx_pluse+1,cy_minuse:cy_pluse+1].reshape(1,-1),k = 1)[0]),dim = 0)
+    matrix = matrix.squeeze()
+    final_points = [matrix == score_f]
+    final_cx = cx1_f[final_points].long().to(device)
+    final_cy = cy1_f[final_points].long().to(device)
+    final_score = score_f[final_points]
+    final_points1 =[(element0,element1,element2) for element0,element1,element2 in zip(final_score.cpu().tolist(),final_cy.cpu().tolist(),final_cx.cpu().tolist())]
+    return final_points1[0:max_det]
 
-    index = 0        
-    for i in range(0,score.size(0)):
-        for j in range(0,score.size(1)):
-            if(score[i][j] > min_score):
-                new_matrix = heatmap[wind_sizes[index][0]:wind_sizes[index][2],wind_sizes[index][1]:wind_sizes[index][3]].reshape(1,-1)
-                if(new_matrix.size(1) != 1):
-                    new_matrix = new_matrix.squeeze()
-                
-                count_ele = new_matrix.tolist().count(score[i][j])
-                m1 = []
-                m2 = []
-                if(count_ele > 1) and (count_ele == max_pool_ks*max_pool_ks):
-                    _,indices = torch.topk(new_matrix,count_ele)
-                    m1 = torch.floor_divide(indices,max_pool_ks)
-                    m2 = indices % max_pool_ks
-                    for s in range(0,len(m2)):
-                        list_extracted.append((score[i][j].item(),wind_sizes[index][1]+m2[s].item(),wind_sizes[index][0]+m1[s].item()))
-                else:    
-                    list_extracted.append((score[i][j].item(),cy[i][j].item(),cx[i][j].item()))
-            index = index+1
-    
-    final_list = [elem for elem in list_extracted]
-    for k in list_extracted:
-        score1 = k[0]
-        cy1 = k[1]
-        cx1 = k[2]
-        if(max_pool_ks == 1):
-            max_pool_ks = 0
-        for ele in list_extracted:
-            if(cy1-max_pool_ks <= ele[1] <= cy1+max_pool_ks):
-                if(cx1-max_pool_ks <= ele[2] <= cx1+max_pool_ks):
-                    if(score1 < ele[0]):
-                        if k in final_list:
-                            final_list.remove(k)
-                            break
-                    elif(score1 > ele[0]):
-                        if ele in final_list:
-                            final_list.remove(ele)
-    return(final_list[0:max_det]) 
-
-    
-class FCN(torch.nn.Module):
+class Detector(torch.nn.Module):
     class construct_layer(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()
@@ -86,14 +65,19 @@ class FCN(torch.nn.Module):
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()  
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
-                                                      torch.nn.Conv2d(in_channels, out_channels, kernel_size=1),
-                                                      torch.nn.BatchNorm2d(out_channels),
-                                                      torch.nn.ReLU())
-            #self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
-             #                                        torch.nn.BatchNorm2d(out_channels),
-              #                                       torch.nn.ReLU())
+            #self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
+             #                                         torch.nn.Conv2d(in_channels, out_channels, kernel_size=1),
+              #                                        torch.nn.BatchNorm2d(out_channels),
+               #                                       torch.nn.ReLU())
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.ConvTranspose2d(out_channels,out_channels,3,padding = 1,stride =2,output_padding = 1))
            
+
         def forward(self,x): 
             return self.concat_layers1(x)
 
@@ -105,9 +89,12 @@ class FCN(torch.nn.Module):
         self.third_conv = self.construct_layer(128,256)
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
-        self.third_up_conv = self.up_conv(128,5)
+        self.third_up_conv = self.up_conv(128,3)
+        #self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1)
         self.pool = torch.nn.MaxPool2d(2)
         self.sig_layer =torch.nn.Sigmoid()
+        self.batch_norm = torch.nn.BatchNorm2d(3)
+        self.relu = torch.nn.ReLU()
 
     def forward(self,x):
         padding_done = 0
@@ -123,7 +110,7 @@ class FCN(torch.nn.Module):
             padded_ow = ow
             padded_oh = oh
             x = F.pad(x, (0, padh,0, padw), value =0)
-        
+        #x =self.batch_norm(x)
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
         second_res =  self.second_conv(max_pool_first)
@@ -133,14 +120,14 @@ class FCN(torch.nn.Module):
         first_up_res = self.first_up_conv(max_pool_third)
         second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
-        if padding_done == 1:
-            final = final[:,:,0:padded_ow,0:padded_oh]
+        #final_final = self.out_conv(final)
         return final
         
         
 
     def detect(self, image,to_print):
         y = image[None,:,:,:]
+
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
         #print("max_y shape is {}".format(max_pool_first.shape))
@@ -165,16 +152,16 @@ class FCN(torch.nn.Module):
         final_final1 = final_final1.squeeze()
         if(to_print == 1):
             print(final_final1)
-        list_1 = extract_peak(final_final1[0],min_score = 0.5)
+        list_1 = extract_peak(final_final1[0],min_score = 0.6,max_det = 100)
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final_final1[1],min_score = 0.5)
+        list_2 = extract_peak(final_final1[1],min_score =0.6,max_det = 100)
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final_final1[2], min_score = 0.5)
+        list_3 = extract_peak(final_final1[2],min_score = 0.6,max_det = 100)
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
