@@ -91,7 +91,7 @@ class PR:
         import numpy as np
         pr = np.array(self.curve, np.float32)
         return np.mean([np.max(pr[pr[:, 1] >= t, 0], initial=0) for t in np.linspace(0, 1, n_samples)])
-    class FocalLoss(torch.nn.Module):
+class FocalLoss(torch.nn.Module):
     def __init__(self, alpha=0.10, gamma=2):
         super(FocalLoss, self).__init__()
         self.alpha = alpha
