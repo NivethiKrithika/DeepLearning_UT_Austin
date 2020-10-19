@@ -26,12 +26,14 @@ class SuperTuxDataset(Dataset):
         self.transform = torchvision.transforms.Compose([transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
                                                          torchvision.transforms.RandomHorizontalFlip(),
                                                          torchvision.transforms.RandomVerticalFlip(), 
-                                                       torchvision.transforms.ToTensor(),
-                                                        torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
-                                                                                        std = [0.229,0.224,0.225])])
-  
+                                                       torchvision.transforms.ToTensor()])
+        #tr_image = torchvision.transforms.ToTensor()
+        #self.transform1 =  torchvision.transforms.Compose([(torchvision.transforms.ToTensor())])
+        #print(self.transform1)
         to_image=transforms.ToPILImage()
+        #i = 1;
         self.list1 = []
+        #print(dataset_path1)
         for filename in sorted(os.listdir(dataset_path)):
             file_path = os.path.abspath(os.path.join(dataset_path, filename))
             _, file_extension = os.path.splitext(file_path)
@@ -41,6 +43,12 @@ class SuperTuxDataset(Dataset):
                 self.list1.append(image)
                 image.load()
                 
+
+                
+        #self.data = torch.stack(list1)
+        #list1.clear()
+        #print("loaded succesfully")
+        #print(self.data.shape)
 
         csv_path = os.path.join(dataset_path,"labels.csv")
         with open(csv_path,'r') as dest_f:
@@ -73,13 +81,12 @@ class SuperTuxDataset(Dataset):
 
 class DenseSuperTuxDataset(Dataset):
     def __init__(self, dataset_path, transform=dense_transforms.ToTensor()):
+        #print(dataset_path)
         from glob import glob
         from os import path
-        transform = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
-                                                         dense_transforms.RandomHorizontalFlip(),
-                                                         dense_transforms.ToTensor(),
-                                                         dense_transforms.Normalize(mean = [0.485,0.456,0.406],
-                                                                                        std = [0.229,0.224,0.225])])
+        #transform = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
+         #                                                dense_transforms.RandomHorizontalFlip(),
+          #                                               dense_transforms.ToTensor()])
         self.files = []
         #print(path.join(dataset_path, '*_im.jpg'))
         for im_f in sorted(glob(path.join(dataset_path, '*_im.jpg'))):
