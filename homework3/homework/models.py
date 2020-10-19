@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
 class CNNClassifier(torch.nn.Module):
@@ -19,13 +20,24 @@ class CNNClassifier(torch.nn.Module):
             self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
                                                  torch.nn.BatchNorm2d(out_channels)) 
             
+            #if(stride != 1):
+         
+            
+            #self.concat_layers = torch.nn.Sequential(*layers)
+          #  self.classifier = torch.nn.Linear(c,6)
+        #raise NotImplementedError('CNNClassifier.__init__')
 
         def forward(self, x):
             identity = x
             if(self.down_size):
                 identity = self.down_size(x)
             return self.concat_layers(x) + identity
-
+                 
+            #y = self.concat_layers(x)
+            #print(self.concat_layers(x))
+            #print(self.concat_layers(x).mean([2,3]))
+            #return self.classifier(self.concat_layers(x).mean([2,3]))
+            #raise NotImplementedError('CNNClassifier.forward')
     def __init__(self):
         super().__init__()
         c = 3
@@ -34,17 +46,20 @@ class CNNClassifier(torch.nn.Module):
         layers.append(torch.nn.BatchNorm2d(16))
         layers.append(torch.nn.ReLU())
         c = 16
-        L = [64,128,256,512]
+        L = [32,64,128,256]
         for out_channels in L:
             layers.append(self.Block(c,out_channels,2))
             c = out_channels
         self.final_layers = torch.nn.Sequential(*layers)
-        self.classifier = torch.nn.Sequential(torch.nn.Linear(512*3*3,1000),torch.nn.ReLU(),torch.nn.Dropout(p = 0.5))
+        self.classifier = torch.nn.Sequential(torch.nn.Linear(256*3*3,1000),torch.nn.ReLU(),torch.nn.Dropout(p = 0.5))
         self.final = torch.nn.Linear(1000,6)
         
     def forward(self,x):
         z = self.final_layers(x)
+        #z = z.mean([2,3])
         return (self.final(self.classifier(z.view(z.size(0),-1))))
+            #print("out_channels is {}".format(out_channels))
+            #print(c)
 
 
         raise NotImplementedError('CNNClassifier.forward')
@@ -83,8 +98,24 @@ class FCN(torch.nn.Module):
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,5)
+        
+       # layers= []
+       # L = [32,64,128]
+       # c = 3
+       # for l in L:
+        #    layers.append(self.construct_layer(c,l))
+         #   layers.append(torch.nn.Maxpool2d(2))
+          #  c = l
+        #layers.append(self.up_conv(c,64))
+        
+            
         self.pool = torch.nn.MaxPool2d(2)
+        #self.final_layers = torch.nn.Sequential(*layers)
+        #self.final = torch.nn.Sequential(*layers1)
+        self.out_conv = torch.nn.Conv2d(32,5,1)
 
+
+        
     def forward(self,x):
         padding_done = 0
         padded_oh = 0
@@ -100,21 +131,49 @@ class FCN(torch.nn.Module):
             padded_oh = oh
             x = F.pad(x, (0, padh,0, padw), value =0)
         
+        mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
+        mean_mod = mean[None,:,None,None]
+        x = x - mean_mod
+        #print("mean is  {}".format(x))
+        std= torch.Tensor([0.229, 0.224, 0.225]).to(device)
+        std_mod =std[None,:,None,None]
+        x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
+        #print("max_y shape is {}".format(max_pool_first.shape))
+        
         second_res =  self.second_conv(max_pool_first)
         max_pool_sec = self.pool(second_res)
+        #print("max_z shape is {}".format(max_pool_sec.shape))
+        
         third_res =  self.third_conv(max_pool_sec)       
         max_pool_third = self.pool(third_res)
+        #print("max_m size is {}".format(max_pool_third.shape))
+        
         first_up_res = self.first_up_conv(max_pool_third)
+        #print(first_up_res.shape)
+        
         second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
+        #print ("n shape is {}".format(second_up_res.shape))
+        
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
+        #print("third shape is {}".format(third_up_res.shape))
+        #final = self.out_conv(third_up_res)
         if padding_done == 1:
             final = final[:,:,0:padded_ow,0:padded_oh]
         return final
-        
-        
-        
+        """
+        Your code here
+        @x: torch.Tensor((B,3,H,W))
+        @return: torch.Tensor((B,6,H,W))
+        Hint: Apply input normalization inside the network, to make sure it is applied in the grader
+        Hint: Input and output resolutions need to match, use output_padding in up-convolutions, crop the output
+              if required (use z = z[:, :, :H, :W], where H and W are the height and width of a corresponding strided
+              convolution
+        """
+        raise NotImplementedError('FCN.forward')
+
+
 model_factory = {
     'cnn': CNNClassifier,
     'fcn': FCN,
