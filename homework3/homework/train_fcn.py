@@ -36,9 +36,9 @@ def train(args):
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
     #optimizer = torch.optim.Adam(model.parameters(),lr = 0.0003)
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.008,momentum = 0.9)
+    optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9)
     
-    scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 20,gamma = 0.1)
+    scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 15,gamma = 0.9)
     n_epochs = 50
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss()
