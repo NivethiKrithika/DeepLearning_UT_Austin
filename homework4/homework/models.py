@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import torchvision
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
@@ -95,22 +96,17 @@ class Detector(torch.nn.Module):
         self.sig_layer =torch.nn.Sigmoid()
         self.batch_norm = torch.nn.BatchNorm2d(3)
         self.relu = torch.nn.ReLU()
+        self.transform3 = torchvision.torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
+                                                                       std = [0.229,0.224,0.225])])
 
     def forward(self,x):
-        padding_done = 0
-        padded_oh = 0
-        padded_ow = 0
-        if x.size(2) < 16 or x.size(3) < 16:
-            padding_done = 1
-            ow, oh = x.size(2),x.size(3)
-            #print(oh)
-            #print(ow)
-            padh = 16 - oh if oh < 16 else 0
-            padw = 16 - ow if ow < 16 else 0
-            padded_ow = ow
-            padded_oh = oh
-            x = F.pad(x, (0, padh,0, padw), value =0)
-        #x =self.batch_norm(x)
+        mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
+        mean_mod = mean[None,:,None,None]
+        x = x - mean_mod
+        #print("mean is  {}".format(x))
+        std= torch.Tensor([0.229, 0.224, 0.225]).to(device)
+        std_mod =std[None,:,None,None]
+        x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
         second_res =  self.second_conv(max_pool_first)
@@ -126,7 +122,10 @@ class Detector(torch.nn.Module):
         
 
     def detect(self, image,to_print):
+        
+        image = self.transform3(image)
         y = image[None,:,:,:]
+
 
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
