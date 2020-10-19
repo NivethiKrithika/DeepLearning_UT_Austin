@@ -26,13 +26,13 @@ def extract_peak(heatmap, max_pool_ks=8, min_score=0, max_det=30):
     points3 = torch.ones(cx1_f.shape).to(device)
     points5 = torch.ones(cx1_f.shape).to(device)
     points6 = torch.ones(cx1_f.shape).to(device)
-    cy_minus = torch.max(cy1_f - max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cy_minus = torch.max(cy1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
     cy_minus[cy_minus > heatmap.size(1)-1] = heatmap.size(1)-1
-    cy_plus = torch.max(cy1_f + max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cy_plus = torch.max(cy1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
     cy_plus[cy_plus > heatmap.size(1)-1] = heatmap.size(1)-1
-    cx_minus = torch.max(cx1_f - max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cx_minus = torch.max(cx1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
     cx_minus[cx_minus > heatmap.size(0)-1] = heatmap.size(0)-1
-    cx_plus = torch.max(cx1_f + max_pool_ks1[0].item(),torch.tensor([0.])).long().to(device)
+    cx_plus = torch.max(cx1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
     cx_plus[cx_plus > heatmap.size(0)-1] = heatmap.size(0)-1
     points2 = (cy_minus <= cy1_f).to(device)
     points5 = (cy1_f <= cy_plus).to(device)
