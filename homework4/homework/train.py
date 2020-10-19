@@ -119,7 +119,7 @@ def train(args):
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     model = model.to(device)
-    self.transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
+    transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
                                                         dense_transforms.RandomHorizontalFlip(),
                                                         dense_transforms.ToTensor()])
     #train_logger, valid_logger = None, None
