@@ -119,6 +119,9 @@ def train(args):
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     model = model.to(device)
+    self.transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
+                                                        dense_transforms.RandomHorizontalFlip(),
+                                                        dense_transforms.ToTensor()])
     #train_logger, valid_logger = None, None
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
@@ -132,8 +135,7 @@ def train(args):
     fl = FocalLoss()
     #print(optimizer.param_groups[0]['lr'])
     dataset = DetectionSuperTuxDataset(dataset_path2,
-                                       transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
-                                                                           dense_transforms.ToTensor()]),min_size = 0)
+                                       transform=transform2,min_size = 0)
                                                                           
     batch_size = 32
     run = 0
@@ -197,8 +199,7 @@ def train(args):
                 pr_dist = [PR(is_close=point_close) for _ in range(3)]
                 pr_iou = [PR(is_close=box_iou) for _ in range(3)]
                 p = 0
-                for img, *gts in DetectionSuperTuxDataset(dataset_path2,transform=dense_transforms.Compose([dense_transforms.RandomHorizontalFlip(0),
-                                                                           dense_transforms.ToTensor()]), min_size=0):
+                for img, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
                     p = p+1
                     with torch.no_grad():
                         detections = model.detect(img.to(device),0)
