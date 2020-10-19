@@ -96,7 +96,7 @@ class Detector(torch.nn.Module):
         self.sig_layer =torch.nn.Sigmoid()
         self.batch_norm = torch.nn.BatchNorm2d(3)
         self.relu = torch.nn.ReLU()
-        self.transform3 = torchvision.torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
+        self.transform3 = torchvision.transforms.Normalize(mean = [0.485,0.456,0.406],
                                                                        std = [0.229,0.224,0.225])
 
     def forward(self,x):
