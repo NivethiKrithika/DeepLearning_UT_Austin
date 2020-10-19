@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-
+import torch.nn.functional as F
 from .models import Detector, save_model
 from .utils import load_detection_data,DetectionSuperTuxDataset
 from . import dense_transforms
