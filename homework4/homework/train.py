@@ -136,6 +136,11 @@ class FocalLoss(nn.Module):
         )
 
 """
+    #pred_mask = torch.sigmoid(prediction[:, 0])
+        
+    #mask_loss = mask * ((1-pred_mask)**gamma)* torch.log(pred_mask+1e-12)\
+     #          + (1 - mask)*torch.log(1-pred_mask+1e-12)
+    #mask_loss = -mask_loss.mean(0).sum()
 def accuracy(outputs, labels):
     #print(outputs.shape)
     #print(labels.shape)
