@@ -56,9 +56,11 @@ class Detector(torch.nn.Module):
             self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1),
                                                      torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
-                                                     torch.nn.ReLU())
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1))
         def forward(self,x): 
             return self.concat_layers(x)
 
@@ -66,17 +68,20 @@ class Detector(torch.nn.Module):
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()  
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
+                                                     torch.nn.BatchNorm2d(out_channels),
+                                                     torch.nn.ReLU())
             #self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
              #                                         torch.nn.Conv2d(in_channels, out_channels, kernel_size=1),
               #                                        torch.nn.BatchNorm2d(out_channels),
                #                                       torch.nn.ReLU())
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
-                                                     torch.nn.BatchNorm2d(out_channels),
-                                                     torch.nn.ReLU(),
-                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
-                                                     torch.nn.BatchNorm2d(out_channels),
-                                                     torch.nn.ReLU(),
-                                                     torch.nn.ConvTranspose2d(out_channels,out_channels,3,padding = 1,stride =2,output_padding = 1))
+            #self.concat_layers1 = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+             #                                        torch.nn.BatchNorm2d(out_channels),
+              #                                       torch.nn.ReLU(),
+               #                                      torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                #                                     torch.nn.BatchNorm2d(out_channels),
+                 #                                    torch.nn.ReLU(),
+                  #                                   torch.nn.ConvTranspose2d(out_channels,out_channels,3,padding = 1,stride =2,output_padding = 1))
            
 
         def forward(self,x): 
@@ -91,7 +96,7 @@ class Detector(torch.nn.Module):
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,3)
-        #self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1)
+        self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1)
         self.pool = torch.nn.MaxPool2d(2)
         self.sig_layer =torch.nn.Sigmoid()
         self.batch_norm = torch.nn.BatchNorm2d(3)
@@ -100,13 +105,13 @@ class Detector(torch.nn.Module):
                                                                        std = [0.229,0.224,0.225])
 
     def forward(self,x):
-        mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
-        mean_mod = mean[None,:,None,None]
-        x = x - mean_mod
+        #mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
+        #mean_mod = mean[None,:,None,None]
+        #x = x - mean_mod
         #print("mean is  {}".format(x))
-        std= torch.Tensor([0.229, 0.224, 0.225]).to(device)
-        std_mod =std[None,:,None,None]
-        x = x/std_mod
+        #std= torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
+        #std_mod =std[None,:,None,None]
+        #x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
         second_res =  self.second_conv(max_pool_first)
@@ -116,17 +121,17 @@ class Detector(torch.nn.Module):
         first_up_res = self.first_up_conv(max_pool_third)
         second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
-        #final_final = self.out_conv(final)
-        return final
+        final_final = self.out_conv(final)
+        return final_final
         
         
 
     def detect(self, image,to_print):
         
-        image = self.transform3(image)
+
         y = image[None,:,:,:]
-
-
+        
+        
         first_res1 = self.first_conv(y)
         max_pool_first1 = self.pool(first_res1)
         #print("max_y shape is {}".format(max_pool_first.shape))
@@ -146,8 +151,8 @@ class Detector(torch.nn.Module):
         #print ("n shape is {}".format(second_up_res.shape))
         
         final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
- 
-        final_final1 = self.sig_layer(final1)
+        final12 =self.out_conv(final1)
+        final_final1 = self.sig_layer(final12)
         final_final1 = final_final1.squeeze()
         if(to_print == 1):
             print(final_final1)
