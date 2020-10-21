@@ -14,7 +14,8 @@ class CNNClassifier(torch.nn.Module):
                                                      torch.nn.Dropout(p = 0.1),
                                                      torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
-                                                     torch.nn.ReLU())
+                                                     torch.nn.ReLU(),
+                                                     torch.nn.Dropout(p = 0.1))
             
             self.down_size = None
             self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
@@ -118,6 +119,7 @@ class FCN(torch.nn.Module):
 
         
     def forward(self,x):
+        x = x.to(device)
         padding_done = 0
         padded_oh = 0
         padded_ow = 0
@@ -133,11 +135,11 @@ class FCN(torch.nn.Module):
             x = F.pad(x, (0, padh,0, padw), value =0)
         
         mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
-        mean_mod = mean[None,:,None,None]
+        mean_mod = mean[None,:,None,None].to(device)
         x = x - mean_mod
         #print("mean is  {}".format(x))
         std= torch.Tensor([0.229, 0.224, 0.225]).to(device)
-        std_mod =std[None,:,None,None]
+        std_mod =std[None,:,None,None].to(device)
         x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
