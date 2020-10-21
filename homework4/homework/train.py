@@ -6,11 +6,24 @@ from .utils import load_detection_data,DetectionSuperTuxDataset
 from . import dense_transforms
 import torch.utils.tensorboard as tb
 import os
+import random
 dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'dense_data','train')
 dataset_path3 = os.path.join(dir,'dense_data','valid')
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 torch.set_printoptions(profile="full")
+
+def seed_torch(seed=1029):
+  random.seed(seed)
+  os.environ['PYTHONHASHSEED'] = str(seed)
+  np.random.seed(seed)
+  torch.manual_seed(seed)
+  torch.cuda.manual_seed(seed)
+  torch.backends.cudnn.enabled = False
+  torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+  torch.backends.cudnn.benchmark = False
+  torch.backends.cudnn.deterministic = True
+
 
 def point_in_box(pred, lbl):
     px, py = pred[:, None, 0], pred[:, None, 1]
@@ -149,6 +162,7 @@ def accuracy(outputs, labels):
 def train(args):
     sig_layer = torch.nn.Sigmoid()
     from os import path
+    seed_torch()
     model = Detector()
     model = model.to(device)
     transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
@@ -157,10 +171,10 @@ def train(args):
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
-    optimizer = torch.optim.Adam(model.parameters(),lr = 1e-6)
+    #optimizer = torch.optim.Adam(model.parameters(),lr = 1e-6)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
-    #optimizer = torch.optim.SGD(model.parameters(),lr = 1e-5,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 20
+    optimizer = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
+    n_epochs = 10
     train_global_step = 0
     fl = FocalLoss()
     dataset = DetectionSuperTuxDataset(dataset_path2,
@@ -174,7 +188,7 @@ def train(args):
     criterion = torch.nn.BCEWithLogitsLoss()
  
                                                                        
-    batch_size = 8
+    batch_size = 4
     run = 0
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
