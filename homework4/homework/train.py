@@ -46,6 +46,57 @@ def box_iou(pred, lbl, t=0.5):
     return iou > t
 
 
+def _one_hot(x, n):
+    return (x.view(-1, 1) == torch.arange(n, dtype=x.dtype, device=x.device)).int()
+    
+class ConfusionMatrix(object):
+    def _make(self, preds, labels):
+        label_range = torch.arange(self.size, device=preds.device)[None, :]
+        preds_one_hot, labels_one_hot = _one_hot(preds, self.size), _one_hot(labels, self.size)
+        return (labels_one_hot[:, :, None] * preds_one_hot[:, None, :]).sum(dim=0).detach()
+
+    def __init__(self, size=5):
+        """
+        This class builds and updates a confusion matrix.
+        :param size: the number of classes to consider
+        """
+        self.matrix = torch.zeros(size, size)
+        self.size = size
+
+    def add(self, preds, labels):
+        """
+        Updates the confusion matrix using predictions `preds` (e.g. logit.argmax(1)) and ground truth `labels`
+        """
+        self.matrix = self.matrix.to(preds.device)
+        self.matrix += self._make(preds, labels).float()
+
+    @property
+    def class_iou(self):
+        true_pos = self.matrix.diagonal()
+        return true_pos / (self.matrix.sum(0) + self.matrix.sum(1) - true_pos + 1e-5)
+
+    @property
+    def iou(self):
+        return self.class_iou.mean()
+
+    @property
+    def global_accuracy(self):
+        true_pos = self.matrix.diagonal()
+        return true_pos.sum() / (self.matrix.sum() + 1e-5)
+
+    @property
+    def class_accuracy(self):
+        true_pos = self.matrix.diagonal()
+        return true_pos / (self.matrix.sum(1) + 1e-5)
+
+    @property
+    def average_accuracy(self):
+        return self.class_accuracy.mean()
+
+    @property
+    def per_class(self):
+        return self.matrix / (self.matrix.sum(1, keepdims=True) + 1e-5)
+
 
 class PR:
     def __init__(self, min_size=20, is_close=point_in_box):
@@ -166,7 +217,7 @@ def train(args):
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
     #optimizer = torch.optim.Adam(model.parameters(),lr = 1e-6)
-    optimizer3 = torch.optim.Adam(model.parameters(),lr = 1e-6)
+    optimizer3 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     optimizer2 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     optimizer1 = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
@@ -178,8 +229,8 @@ def train(args):
     weights = [0.04]
     class_weights=torch.FloatTensor(weights).cuda()
     fl1 = FocalLoss(alpha = 0.03)
-    fl2 = FocalLoss(alpha = 0.005)
-    fl3 = FocalLoss(alpha = 0.005)
+    fl2 = FocalLoss(alpha = 0.01)
+    fl3 = FocalLoss(alpha = 0.01)
     
   
     #learn = cnn_learner(data, models.resnet50, metrics=[accuracy]).to_fp16()
@@ -245,17 +296,32 @@ def train(args):
         pr_box = [PR() for _ in range(3)]
         pr_dist = [PR(is_close=point_close) for _ in range(3)]
         pr_iou = [PR(is_close=box_iou) for _ in range(3)]
+        c1 = ConfusionMatrix()
+        c2 = ConfusionMatrix()
+        c3 = ConfusionMatrix()
         for img1, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
             p = p+1
             with torch.no_grad():
-                #tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
+                tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
                 detections = model.detect(img1.to(device),0)
                 #detections = model.detect(tlabel.to(device),0)
+                output2 = model(img1[None,:,:,:].to(device))
+                output2 = (output2 > 0.5).long()
+                output2 = output2.squeeze()
+                c1.add(output2[0], tlabel[0].long().to(device))
+                c2.add(output2[1], tlabel[1].long().to(device))
+                c3.add(output2[2], tlabel[2].long().to(device))
+                accu1 = output2[0].eq(tlabel[0]).float().mean()
+                accu2 = output2[1].eq(tlabel[1]).float().mean()
+                accu3 = output2[2].eq(tlabel[2]).float().mean() 
+                #tlabel = tlabel[None,:,:,:].to(device)
   
                 for i, gt in enumerate(gts):
                     pr_box[i].add(detections[i], gt)
                     pr_dist[i].add(detections[i], gt)
                     pr_iou[i].add(detections[i], gt)
+
+
             if(p == 300):
                 break;
                     
@@ -287,6 +353,13 @@ def train(args):
             if(len(pr_iou[2].det) >0):
                 iou3 = pr_iou[2].average_prec
                 print("iou 3 is {}".format(iou3))
+            print("c1 is {}".format(c1.global_accuracy))
+            print("c2 is {}".format(c2.global_accuracy))
+            print("c3 is {}".format(c3.global_accuracy))
+            print("accu1 is {}".format(accu1))
+            print("accu2 is {}".format(accu2))
+            print("accu3 is {}".format(accu3))
+
 
             
     model.eval()        
