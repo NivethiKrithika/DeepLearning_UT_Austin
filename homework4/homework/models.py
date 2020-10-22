@@ -9,43 +9,44 @@ def extract_peak(heatmap, max_pool_ks=8, min_score=0, max_det=30):
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices =True) 
     if(max_pool_ks == 1):
         max_pool_ks = 0
-    max_pool_ks1 = torch.Tensor(1).to(device)
+    #print(heatmap.device)
+    max_pool_ks1 = torch.Tensor(1).to(heatmap.device)
     max_pool_ks1[0] = max_pool_ks
-    k = heatmap[None,None].float().to(device)
-    score = pool(k)[0].to(device)
-    cx,cy = torch.floor_divide(pool(k)[1],heatmap.shape[1]).to(device), (pool(k)[1]%heatmap.shape[1]).to(device)
+    k = heatmap[None,None].float().to(heatmap.device)
+    score = pool(k)[0].to(heatmap.device)
+    cx,cy = torch.floor_divide(pool(k)[1],heatmap.shape[1]).to(heatmap.device), (pool(k)[1]%heatmap.shape[1]).to(heatmap.device)
 
-    score_f = torch.squeeze(torch.squeeze(score).float().view(1,-1)).to(device)
-    cx1_f = torch.squeeze(torch.squeeze(cx).float().view(1,-1)).to(device)
-    cy1_f = torch.squeeze(torch.squeeze(cy).float().view(1,-1)).to(device)
-    points = torch.ones(cx1_f.shape).to(device)
+    score_f = torch.squeeze(torch.squeeze(score).float().view(1,-1)).to(heatmap.device)
+    cx1_f = torch.squeeze(torch.squeeze(cx).float().view(1,-1)).to(heatmap.device)
+    cy1_f = torch.squeeze(torch.squeeze(cy).float().view(1,-1)).to(heatmap.device)
+    points = torch.ones(cx1_f.shape).to(heatmap.device)
     points = score_f > min_score
-    score_f = score_f[points].to(device)
-    cx1_f = cx1_f[points].to(device)
-    cy1_f = cy1_f[points].to(device)
-    points2 = torch.ones(cx1_f.shape).to(device)
-    points3 = torch.ones(cx1_f.shape).to(device)
-    points5 = torch.ones(cx1_f.shape).to(device)
-    points6 = torch.ones(cx1_f.shape).to(device)
-    cy_minus = torch.max(cy1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
+    score_f = score_f[points].to(heatmap.device)
+    cx1_f = cx1_f[points].to(heatmap.device)
+    cy1_f = cy1_f[points].to(heatmap.device)
+    points2 = torch.ones(cx1_f.shape).to(heatmap.device)
+    points3 = torch.ones(cx1_f.shape).to(heatmap.device)
+    points5 = torch.ones(cx1_f.shape).to(heatmap.device)
+    points6 = torch.ones(cx1_f.shape).to(heatmap.device)
+    cy_minus = torch.max(cy1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(heatmap.device)).long().to(heatmap.device)
     cy_minus[cy_minus > heatmap.size(1)-1] = heatmap.size(1)-1
-    cy_plus = torch.max(cy1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
+    cy_plus = torch.max(cy1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(heatmap.device)).long().to(heatmap.device)
     cy_plus[cy_plus > heatmap.size(1)-1] = heatmap.size(1)-1
-    cx_minus = torch.max(cx1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
+    cx_minus = torch.max(cx1_f - max_pool_ks1[0].item(),torch.tensor([0.]).to(heatmap.device)).long().to(heatmap.device)
     cx_minus[cx_minus > heatmap.size(0)-1] = heatmap.size(0)-1
-    cx_plus = torch.max(cx1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(device)).long().to(device)
+    cx_plus = torch.max(cx1_f + max_pool_ks1[0].item(),torch.tensor([0.]).to(heatmap.device)).long().to(heatmap.device)
     cx_plus[cx_plus > heatmap.size(0)-1] = heatmap.size(0)-1
-    points2 = (cy_minus <= cy1_f).to(device)
-    points5 = (cy1_f <= cy_plus).to(device)
-    points3 = (cx_minus <= cx1_f).to(device)
-    points6 = (cx1_f <= cx_plus).to(device)
-    matrix = torch.Tensor().to(device)
+    points2 = (cy_minus <= cy1_f).to(heatmap.device)
+    points5 = (cy1_f <= cy_plus).to(heatmap.device)
+    points3 = (cx_minus <= cx1_f).to(heatmap.device)
+    points6 = (cx1_f <= cx_plus).to(heatmap.device)
+    matrix = torch.Tensor().to(heatmap.device)
     for cx_minuse,cx_pluse,cy_minuse,cy_pluse in zip(cx_minus,cx_plus,cy_minus,cy_plus):
         matrix = torch.cat((matrix,torch.topk(heatmap[cx_minuse:cx_pluse+1,cy_minuse:cy_pluse+1].reshape(1,-1),k = 1)[0]),dim = 0)
     matrix = matrix.squeeze()
     final_points = [matrix == score_f]
-    final_cx = cx1_f[final_points].long().to(device)
-    final_cy = cy1_f[final_points].long().to(device)
+    final_cx = cx1_f[final_points].long().to(heatmap.device)
+    final_cy = cy1_f[final_points].long().to(heatmap.device)
     final_score = score_f[final_points]
     final_points1 =[(element0,element1,element2) for element0,element1,element2 in zip(final_score.cpu().tolist(),final_cy.cpu().tolist(),final_cx.cpu().tolist())]
     return final_points1[0:max_det]
@@ -54,11 +55,11 @@ class Detector(torch.nn.Module):
     class construct_layer(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()
-            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1,bias = False),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
                                                      torch.nn.Dropout(p = 0.1),
-                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1,bias = False),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
                                                      torch.nn.Dropout(p = 0.1))
@@ -69,7 +70,7 @@ class Detector(torch.nn.Module):
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()  
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1,bias = False),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
             #self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
@@ -97,7 +98,7 @@ class Detector(torch.nn.Module):
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,3)
-        self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1)
+        self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1,bias = -2.19)
         self.pool = torch.nn.MaxPool2d(2)
         self.sig_layer =torch.nn.Sigmoid()
         self.batch_norm = torch.nn.BatchNorm2d(3)
