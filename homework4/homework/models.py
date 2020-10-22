@@ -5,6 +5,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 
 def extract_peak(heatmap, max_pool_ks=8, min_score=0, max_det=30):
+  with torch.no_grad():
     pool = torch.nn.MaxPool2d(max_pool_ks,stride = (max_pool_ks,max_pool_ks),ceil_mode = True,return_indices =True) 
     if(max_pool_ks == 1):
         max_pool_ks = 0
@@ -127,67 +128,67 @@ class Detector(torch.nn.Module):
         
 
     def detect(self, image,to_print,label4):
+        with torch.no_grad(): 
+            image = self.transform3(image)
+            y = image[None,:,:,:]
         
-        image = self.transform3(image)
-        y = image[None,:,:,:]
         
-        
-        first_res1 = self.first_conv(y)
-        max_pool_first1 = self.pool(first_res1)
+            first_res1 = self.first_conv(y)
+            max_pool_first1 = self.pool(first_res1)
         #print("max_y shape is {}".format(max_pool_first.shape))
         
-        second_res1 =  self.second_conv(max_pool_first1)
-        max_pool_sec1 = self.pool(second_res1)
+            second_res1 =  self.second_conv(max_pool_first1)
+            max_pool_sec1 = self.pool(second_res1)
         #print("max_z shape is {}".format(max_pool_sec.shape))
         
-        third_res1 =  self.third_conv(max_pool_sec1)       
-        max_pool_third1 = self.pool(third_res1)
+            third_res1 =  self.third_conv(max_pool_sec1)       
+            max_pool_third1 = self.pool(third_res1)
         #print("max_m size is {}".format(max_pool_third.shape))
         
-        first_up_res1 = self.first_up_conv(max_pool_third1)
+            first_up_res1 = self.first_up_conv(max_pool_third1)
         #print(first_up_res.shape)
         
-        second_up_res1 = self.second_up_conv(torch.cat([first_up_res1,max_pool_sec1],1))
+            second_up_res1 = self.second_up_conv(torch.cat([first_up_res1,max_pool_sec1],1))
         #print ("n shape is {}".format(second_up_res.shape))
         
-        final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
-        final12 =self.out_conv(final1)
-        final_final1 = self.sig_layer(final12)
-        final_final1 = final_final1.squeeze()
-        if(to_print == 1):
-            print(final_final1)
-            list_11 = extract_peak(label4[0],min_score = 0,max_det = 100)
-            kart_det1 = []
-            for ele4 in list_11:
-                kart_det1.append((ele4[0],ele4[1],ele4[2],0,0))
-            print(kart_det1)
-            bomb_det1 = []
-            list_21 = extract_peak(label4[1],min_score =0,max_det = 100)
-            for ele5 in list_21:
-                bomb_det1.append((ele5[0],ele5[1],ele5[2],0,0))
-            print(bomb_det1)
-            pickup_det1 = []
-            list_31 = extract_peak(label4[2],min_score = 0,max_det = 100)
-            for ele6 in list_31:
-                pickup_det1.append((ele6[0],ele6[1],ele6[2],0,0))
-            print(pickup_det1)  
+            final1 = self.third_up_conv(torch.cat([second_up_res1,max_pool_first1],1))
+            final12 =self.out_conv(final1)
+            final_final1 = self.sig_layer(final12)
+            final_final1 = final_final1.squeeze()
+            if(to_print == 1):
+            #print(final_final1)
+                list_11 = extract_peak(label4[0],min_score = 0,max_det = 100)
+                kart_det1 = []
+                for ele4 in list_11:
+                    kart_det1.append((ele4[0],ele4[1],ele4[2],0,0))
+                print(kart_det1)
+                bomb_det1 = []
+                list_21 = extract_peak(label4[1],min_score =0,max_det = 100)
+                for ele5 in list_21:
+                    bomb_det1.append((ele5[0],ele5[1],ele5[2],0,0))
+                print(bomb_det1)
+                pickup_det1 = []
+                list_31 = extract_peak(label4[2],min_score = 0,max_det = 100)
+                for ele6 in list_31:
+                    pickup_det1.append((ele6[0],ele6[1],ele6[2],0,0))
+                print(pickup_det1)  
 
         
         #final_final1 = y.squeeze()
-        list_1 = extract_peak(final_final1[0],min_score = 0.55,max_det = 100)
-        kart_det = []
-        for ele1 in list_1:
-            kart_det.append((ele1[0],ele1[1],ele1[2],0,0))
-        bomb_det = []
-        list_2 = extract_peak(final_final1[1],min_score =0.5,max_det = 100)
-        for ele2 in list_2:
-            bomb_det.append((ele2[0],ele2[1],ele2[2],0,0))
-        pickup_det = []
-        list_3 = extract_peak(final_final1[2],min_score = 0.5,max_det = 100)
-        for ele3 in list_3:
-            pickup_det.append((ele3[0],ele3[1],ele3[2],0,0))
+            list_1 = extract_peak(final_final1[0],min_score = 0.55,max_det = 100)
+            kart_det = []
+            for ele1 in list_1:
+                kart_det.append((ele1[0],ele1[1],ele1[2],0,0))
+            bomb_det = []
+            list_2 = extract_peak(final_final1[1],min_score =0.5,max_det = 100)
+            for ele2 in list_2:
+                bomb_det.append((ele2[0],ele2[1],ele2[2],0,0))
+            pickup_det = []
+            list_3 = extract_peak(final_final1[2],min_score = 0.5,max_det = 100)
+            for ele3 in list_3:
+                pickup_det.append((ele3[0],ele3[1],ele3[2],0,0))
         
-        return kart_det,bomb_det,pickup_det
+            return kart_det,bomb_det,pickup_det
         """
            Your code here.
            Implement object detection here.
