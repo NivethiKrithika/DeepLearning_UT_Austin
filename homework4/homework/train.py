@@ -303,7 +303,7 @@ def train(args):
             p = p+1
             with torch.no_grad():
                 tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
-                detections = model.detect(img1.to(device),0)
+                detections = model.detect(img1.to(device),0,tlabel)
                 #detections = model.detect(tlabel.to(device),0)
                 output2 = model(img1[None,:,:,:].to(device))
                 output2 = (output2 > 0.5).long()
@@ -311,15 +311,15 @@ def train(args):
                 c1.add(output2[0], tlabel[0].long().to(device))
                 c2.add(output2[1], tlabel[1].long().to(device))
                 c3.add(output2[2], tlabel[2].long().to(device))
-                accu1 = output2[0].eq(tlabel[0]).float().mean()
-                accu2 = output2[1].eq(tlabel[1]).float().mean()
-                accu3 = output2[2].eq(tlabel[2]).float().mean() 
+                accu1 = output2[0].eq(tlabel[0].to(device)).float().mean()
+                accu2 = output2[1].eq(tlabel[1].to(device)).float().mean()
+                accu3 = output2[2].eq(tlabel[2].to(device)).float().mean() 
                 #tlabel = tlabel[None,:,:,:].to(device)
   
                 for i, gt in enumerate(gts):
                     pr_box[i].add(detections[i], gt)
                     pr_dist[i].add(detections[i], gt)
-                    pr_iou[i].add(detections[i], gt)
+                    #pr_iou[i].add(detections[i], gt)
 
 
             if(p == 300):
@@ -344,27 +344,37 @@ def train(args):
             if(len(pr_dist[2].det) >0):
                 dist2 = pr_dist[2].average_prec
                 print("dist 3 is {}".format(dist2))
-            if(len(pr_iou[0].det) >0):
-                iou1 = pr_iou[0].average_prec
-                print("iou 1 is {}".format(iou1))
-            if(len(pr_iou[1].det) >0):
-                iou2 = pr_iou[1].average_prec
-                print("iou 2 is {}".format(iou2))
-            if(len(pr_iou[2].det) >0):
-                iou3 = pr_iou[2].average_prec
-                print("iou 3 is {}".format(iou3))
+            #if(len(pr_iou[0].det) >0):
+             #   iou1 = pr_iou[0].average_prec
+              #  print("iou 1 is {}".format(iou1))
+            #if(len(pr_iou[1].det) >0):
+             #   iou2 = pr_iou[1].average_prec
+              #  print("iou 2 is {}".format(iou2))
+            #if(len(pr_iou[2].det) >0):
+             #   iou3 = pr_iou[2].average_prec
+              #  print("iou 3 is {}".format(iou3))
             print("c1 is {}".format(c1.global_accuracy))
             print("c2 is {}".format(c2.global_accuracy))
             print("c3 is {}".format(c3.global_accuracy))
             print("accu1 is {}".format(accu1))
             print("accu2 is {}".format(accu2))
             print("accu3 is {}".format(accu3))
+            image2, *det2 = dataset[100+1];
+            tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
+            kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
+            print("kart is")
+            print(kart)
+            print("bomb is")
+            print(bomb)
+            print("pickup is")
+            print(pickup)
 
 
             
     model.eval()        
     image2, *det2 = dataset[100+1];
-    kart,bomb,pickup = model.detect(image2.to(device),1)
+    tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
+    kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
     print("kart is")
     print(kart)
     print("bomb is")
