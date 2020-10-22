@@ -220,18 +220,18 @@ def train(args):
     optimizer3 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     optimizer2 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
-    optimizer1 = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 10
+    optimizer = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
+    n_epochs = 20
     train_global_step = 0
     
     dataset = DetectionSuperTuxDataset(dataset_path2,
                                        transform=transform2,min_size = 0)
     weights = [0.04]
     class_weights=torch.FloatTensor(weights).cuda()
-    fl1 = FocalLoss(alpha = 0.03)
-    fl2 = FocalLoss(alpha = 0.01)
-    fl3 = FocalLoss(alpha = 0.01)
-    
+    #fl1 = FocalLoss(alpha = 0.03)
+    #fl2 = FocalLoss(alpha = 0.01)
+    #fl3 = FocalLoss(alpha = 0.01)
+    fl = FocalLoss(alpha = 0.04)
   
     #learn = cnn_learner(data, models.resnet50, metrics=[accuracy]).to_fp16()
     #weight1 = torch.ones(3,96,128).to(device)
@@ -267,21 +267,22 @@ def train(args):
             output = model(train_data)
 
             
-            loss1 =  fl1(output[0],train_label[0]).float()
-            loss2 =  fl2(output[1],train_label[1]).float()
-            loss3 =  fl3(output[2],train_label[2]).float()
-            loss = loss1+loss2+loss3
+            #loss1 =  fl1(output[0],train_label[0]).float()
+            #loss2 =  fl2(output[1],train_label[1]).float()
+            #loss3 =  fl3(output[2],train_label[2]).float()
+            #loss = loss1+loss2+loss3
             #loss = torch.mean(loss)
             loss.backward()
-            optimizer1.step()
-            optimizer1.zero_grad()
+            optimizer.step()
+            optimizer.zero_grad()
+            #optimizer1.zero_grad()
             #loss2.backward(retain_graph = True)
-            optimizer2.step()
-            optimizer2.zero_grad()
+            #optimizer2.step()
+            #optimizer2.zero_grad()
             #loss3.backward()
 
-            optimizer3.step()
-            optimizer3.zero_grad()
+            #optimizer3.step()
+            #optimizer3.zero_grad()
 
             train_global_step +=1
             #del(train_data)
@@ -290,18 +291,19 @@ def train(args):
             #if(run%50 == 0):
                 #log(train_logger,train_data,train_label,output,train_global_step)
         model.eval()
-        run = run+1
-        p = 0;
+        with torch.no_grad():
+            run = run+1
+            p = 0;
                 
-        pr_box = [PR() for _ in range(3)]
-        pr_dist = [PR(is_close=point_close) for _ in range(3)]
-        pr_iou = [PR(is_close=box_iou) for _ in range(3)]
-        c1 = ConfusionMatrix()
-        c2 = ConfusionMatrix()
-        c3 = ConfusionMatrix()
-        for img1, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
-            p = p+1
-            with torch.no_grad():
+            pr_box = [PR() for _ in range(3)]
+            pr_dist = [PR(is_close=point_close) for _ in range(3)]
+            pr_iou = [PR(is_close=box_iou) for _ in range(3)]
+            c1 = ConfusionMatrix()
+            c2 = ConfusionMatrix()
+            c3 = ConfusionMatrix()
+            for img1, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
+                p = p+1
+            
                 tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
                 detections = model.detect(img1.to(device),0,tlabel)
                 #detections = model.detect(tlabel.to(device),0)
@@ -322,28 +324,28 @@ def train(args):
                     #pr_iou[i].add(detections[i], gt)
 
 
-            if(p == 300):
-                break;
+                if(p == 300):
+                    break;
                     
-        with torch.no_grad():
-            if(len(pr_box[0].det) >0):
-                ap = pr_box[0].average_prec
-                print("ap is {}".format(ap))
-            if(len(pr_box[1].det) >0):
-                ap1 = pr_box[1].average_prec
-                print("ap 2 is {}".format(ap1))
-            if(len(pr_box[2].det) >0):
-                ap2 = pr_box[2].average_prec
-                print("ap 3 is {}".format(ap2))
-            if(len(pr_dist[0].det) >0):
-                dist0 = pr_dist[0].average_prec
-                print("dist 1 is {}".format(dist0))
-            if(len(pr_dist[1].det) >0):
-                dist1 = pr_dist[1].average_prec
-                print("dist 2 is {}".format(dist1))
-            if(len(pr_dist[2].det) >0):
-                dist2 = pr_dist[2].average_prec
-                print("dist 3 is {}".format(dist2))
+            with torch.no_grad():
+                if(len(pr_box[0].det) >0):
+                    ap = pr_box[0].average_prec
+                    print("ap is {}".format(ap))
+                if(len(pr_box[1].det) >0):
+                    ap1 = pr_box[1].average_prec
+                    print("ap 2 is {}".format(ap1))
+                if(len(pr_box[2].det) >0):
+                    ap2 = pr_box[2].average_prec
+                    print("ap 3 is {}".format(ap2))
+                if(len(pr_dist[0].det) >0):
+                    dist0 = pr_dist[0].average_prec
+                    print("dist 1 is {}".format(dist0))
+                if(len(pr_dist[1].det) >0):
+                    dist1 = pr_dist[1].average_prec
+                    print("dist 2 is {}".format(dist1))
+                if(len(pr_dist[2].det) >0):
+                    dist2 = pr_dist[2].average_prec
+                    print("dist 3 is {}".format(dist2))
             #if(len(pr_iou[0].det) >0):
              #   iou1 = pr_iou[0].average_prec
               #  print("iou 1 is {}".format(iou1))
@@ -353,34 +355,35 @@ def train(args):
             #if(len(pr_iou[2].det) >0):
              #   iou3 = pr_iou[2].average_prec
               #  print("iou 3 is {}".format(iou3))
-            print("c1 is {}".format(c1.global_accuracy))
-            print("c2 is {}".format(c2.global_accuracy))
-            print("c3 is {}".format(c3.global_accuracy))
-            print("accu1 is {}".format(accu1))
-            print("accu2 is {}".format(accu2))
-            print("accu3 is {}".format(accu3))
-            image2, *det2 = dataset[100+1];
-            tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
-            kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
-            print("kart is")
-            print(kart)
-            print("bomb is")
-            print(bomb)
-            print("pickup is")
-            print(pickup)
+                print("c1 is {}".format(c1.global_accuracy))
+                print("c2 is {}".format(c2.global_accuracy))
+                print("c3 is {}".format(c3.global_accuracy))
+                print("accu1 is {}".format(accu1))
+                print("accu2 is {}".format(accu2))
+                print("accu3 is {}".format(accu3))
+                image2, *det2 = dataset[100+2];
+                tlabel,train_size = dense_transforms.detections_to_heatmap(det2,image2.shape[1:])
+                kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
+                print("kart is")
+                print(kart)
+                print("bomb is")
+                print(bomb)
+                print("pickup is")
+                print(pickup)
 
 
             
-    model.eval()        
-    image2, *det2 = dataset[100+1];
-    tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
-    kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
-    print("kart is")
-    print(kart)
-    print("bomb is")
-    print(bomb)
-    print("pickup is")
-    print(pickup)
+    model.eval()
+    with torch.no_grad():        
+        image2, *det2 = dataset[100+2];
+        tlabel,train_size = dense_transforms.detections_to_heatmap(det2,image2.shape[1:])
+        kart,bomb,pickup = model.detect(image2.to(device),1,tlabel.to(device))
+        print("kart is")
+        print(kart)
+        print("bomb is")
+        print(bomb)
+        print("pickup is")
+        print(pickup)
 
     """
     Your code here, modify your HW3 code
