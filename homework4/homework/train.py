@@ -104,7 +104,7 @@ class PR:
         import numpy as np
         pr = np.array(self.curve, np.float32)
         return np.mean([np.max(pr[pr[:, 1] >= t, 0], initial=0) for t in np.linspace(0, 1, n_samples)])
-
+"""
 class FocalLoss(torch.nn.Module):
     def __init__(self, alpha=0.04, gamma=2,  reduce1=True):
         super(FocalLoss, self).__init__()
@@ -129,26 +129,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 """
-class FocalLoss(nn.Module):
-    
-    def __init__(self, weight=None, 
-                 gamma=2., reduction='none'):
-        nn.Module.__init__(self)
-        self.weight = weight
-        self.gamma = gamma
-        self.reduction = reduction
-        
-    def forward(self, input_tensor, target_tensor):
-        log_prob = F.log_softmax(input_tensor, dim=-1)
-        prob = torch.exp(log_prob)
-        return F.nll_loss(
-            ((1 - prob) ** self.gamma) * log_prob, 
-            target_tensor, 
-            weight=self.weight,
-            reduction = self.reduction
-        )
 
-"""
+class FocalLoss(torch.nn.Module):
+    def __init__(self, alpha=0.04, gamma=2,  reduce1=True):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduce1 = reduce1
+    def forward(self, inputs, targets):
+        bce_loss = F.binary_cross_entropy(inputs, targets, reduction = 'none')
+        p_t = torch.exp(-bce_loss)
+        alpha_tensor = (1 - self.alpha) + targets * (2 * self.alpha - 1)  # alpha if target = 1 and 1 - alpha if target = 0
+        f_loss = alpha_tensor * (1 - p_t) ** self.gamma * bce_loss
+        return f_loss.mean()
+
     #pred_mask = torch.sigmoid(prediction[:, 0])
         
     #mask_loss = mask * ((1-pred_mask)**gamma)* torch.log(pred_mask+1e-12)\
@@ -172,27 +166,33 @@ def train(args):
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
     #optimizer = torch.optim.Adam(model.parameters(),lr = 1e-6)
+    optimizer3 = torch.optim.Adam(model.parameters(),lr = 1e-6)
+    optimizer2 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
-    optimizer = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
+    optimizer1 = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
     n_epochs = 10
     train_global_step = 0
-    fl = FocalLoss()
+    
     dataset = DetectionSuperTuxDataset(dataset_path2,
                                        transform=transform2,min_size = 0)
-    #weights = [0.04, 1]
-    #class_weights=torch.FloatTensor(weights).cuda()
-
+    weights = [0.04]
+    class_weights=torch.FloatTensor(weights).cuda()
+    fl1 = FocalLoss(alpha = 0.03)
+    fl2 = FocalLoss(alpha = 0.005)
+    fl3 = FocalLoss(alpha = 0.005)
+    
+  
     #learn = cnn_learner(data, models.resnet50, metrics=[accuracy]).to_fp16()
-    weight1 = torch.ones(3,96,128).to(device)
-    weight1 = weight1 - 0.96
-    criterion = torch.nn.BCEWithLogitsLoss()
+    #weight1 = torch.ones(3,96,128).to(device)
+    #weight1 = weight1 - 0.96
+    #criterion = torch.nn.BCEWithLogitsLoss()
  
                                                                        
     batch_size = 4
     run = 0
     for iter in range(n_epochs):
         print("iter is {}".format(iter))
-        print(optimizer.param_groups[0]['lr'])
+        #print(optimizer.param_groups[0]['lr'])
         permutation = torch.randperm(9998)
         train_accu = []
         
@@ -212,17 +212,26 @@ def train(args):
             train_label = torch.stack(t_label)
             train_data = train_data.to(device)
             train_label = train_label.to(device)
-            #print(train_label.shape)
-            #weight = torch.tensor([0.04, 0.96]).to(device)
-            #weight_ = weight[train_label.data.view(-1).long()].view_as(train_label)
-            #criterion = torch.nn.BCELoss(reduce=False) 
+
             output = model(train_data)
-            #print(output.shape)
+
             
-            loss =  fl(output,train_label).float()
+            loss1 =  fl1(output[0],train_label[0]).float()
+            loss2 =  fl2(output[1],train_label[1]).float()
+            loss3 =  fl3(output[2],train_label[2]).float()
+            loss = loss1+loss2+loss3
+            #loss = torch.mean(loss)
             loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
+            optimizer1.step()
+            optimizer1.zero_grad()
+            #loss2.backward(retain_graph = True)
+            optimizer2.step()
+            optimizer2.zero_grad()
+            #loss3.backward()
+
+            optimizer3.step()
+            optimizer3.zero_grad()
+
             train_global_step +=1
             #del(train_data)
             #del(train_label)
@@ -239,7 +248,9 @@ def train(args):
         for img1, *gts in DetectionSuperTuxDataset(dataset_path2, min_size=0):
             p = p+1
             with torch.no_grad():
+                #tlabel,train_size = dense_transforms.detections_to_heatmap(gts,img1.shape[1:])
                 detections = model.detect(img1.to(device),0)
+                #detections = model.detect(tlabel.to(device),0)
   
                 for i, gt in enumerate(gts):
                     pr_box[i].add(detections[i], gt)
