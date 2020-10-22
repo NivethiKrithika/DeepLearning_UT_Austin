@@ -126,7 +126,7 @@ class Detector(torch.nn.Module):
         
         
 
-    def detect(self, image,to_print):
+    def detect(self, image,to_print,label4):
         
         image = self.transform3(image)
         y = image[None,:,:,:]
@@ -156,20 +156,36 @@ class Detector(torch.nn.Module):
         final_final1 = final_final1.squeeze()
         if(to_print == 1):
             print(final_final1)
+            list_11 = extract_peak(label4[0],min_score = 0,max_det = 100)
+            kart_det1 = []
+            for ele4 in list_11:
+                kart_det1.append((ele4[0],ele4[1],ele4[2],0,0))
+            print(kart_det1)
+            bomb_det1 = []
+            list_21 = extract_peak(label4[1],min_score =0,max_det = 100)
+            for ele5 in list_21:
+                bomb_det1.append((ele5[0],ele5[1],ele5[2],0,0))
+            print(bomb_det1)
+            pickup_det1 = []
+            list_31 = extract_peak(label4[2],min_score = 0,max_det = 100)
+            for ele6 in list_31:
+                pickup_det1.append((ele6[0],ele6[1],ele6[2],0,0))
+            print(pickup_det1)  
+
         
         #final_final1 = y.squeeze()
         list_1 = extract_peak(final_final1[0],min_score = 0.55,max_det = 100)
         kart_det = []
-        for ele in list_1:
-            kart_det.append((ele[0],ele[1],ele[2],0,0))
+        for ele1 in list_1:
+            kart_det.append((ele1[0],ele1[1],ele1[2],0,0))
         bomb_det = []
         list_2 = extract_peak(final_final1[1],min_score =0.5,max_det = 100)
-        for ele in list_2:
-            bomb_det.append((ele[0],ele[1],ele[2],0,0))
+        for ele2 in list_2:
+            bomb_det.append((ele2[0],ele2[1],ele2[2],0,0))
         pickup_det = []
         list_3 = extract_peak(final_final1[2],min_score = 0.5,max_det = 100)
-        for ele in list_3:
-            pickup_det.append((ele[0],ele[1],ele[2],0,0))
+        for ele3 in list_3:
+            pickup_det.append((ele3[0],ele3[1],ele3[2],0,0))
         
         return kart_det,bomb_det,pickup_det
         """
