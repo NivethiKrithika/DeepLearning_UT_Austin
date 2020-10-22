@@ -105,13 +105,13 @@ class Detector(torch.nn.Module):
                                                                        std = [0.229,0.224,0.225])
 
     def forward(self,x):
-        #mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
-        #mean_mod = mean[None,:,None,None]
-        #x = x - mean_mod
+        mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
+        mean_mod = mean[None,:,None,None]
+        x = x - mean_mod
         #print("mean is  {}".format(x))
-        #std= torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
-        #std_mod =std[None,:,None,None]
-        #x = x/std_mod
+        std= torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
+        std_mod =std[None,:,None,None]
+        x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
         second_res =  self.second_conv(max_pool_first)
@@ -121,14 +121,14 @@ class Detector(torch.nn.Module):
         first_up_res = self.first_up_conv(max_pool_third)
         second_up_res = self.second_up_conv(torch.cat([first_up_res,max_pool_sec],1))
         final = self.third_up_conv(torch.cat([second_up_res,max_pool_first],1))
-        final_final = self.out_conv(final)
+        final_final = self.sig_layer(self.out_conv(final))
         return final_final
         
         
 
     def detect(self, image,to_print):
         
-
+        image = self.transform3(image)
         y = image[None,:,:,:]
         
         
@@ -156,16 +156,18 @@ class Detector(torch.nn.Module):
         final_final1 = final_final1.squeeze()
         if(to_print == 1):
             print(final_final1)
-        list_1 = extract_peak(final_final1[0],min_score = 0.6,max_det = 100)
+        
+        #final_final1 = y.squeeze()
+        list_1 = extract_peak(final_final1[0],min_score = 0.55,max_det = 100)
         kart_det = []
         for ele in list_1:
             kart_det.append((ele[0],ele[1],ele[2],0,0))
         bomb_det = []
-        list_2 = extract_peak(final_final1[1],min_score =0.6,max_det = 100)
+        list_2 = extract_peak(final_final1[1],min_score =0.5,max_det = 100)
         for ele in list_2:
             bomb_det.append((ele[0],ele[1],ele[2],0,0))
         pickup_det = []
-        list_3 = extract_peak(final_final1[2],min_score = 0.6,max_det = 100)
+        list_3 = extract_peak(final_final1[2],min_score = 0.5,max_det = 100)
         for ele in list_3:
             pickup_det.append((ele[0],ele[1],ele[2],0,0))
         
