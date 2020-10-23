@@ -155,7 +155,7 @@ class PR:
         import numpy as np
         pr = np.array(self.curve, np.float32)
         return np.mean([np.max(pr[pr[:, 1] >= t, 0], initial=0) for t in np.linspace(0, 1, n_samples)])
-"""
+
 class FocalLoss(torch.nn.Module):
     def __init__(self, alpha=0.04, gamma=2,  reduce1=True):
         super(FocalLoss, self).__init__()
@@ -165,7 +165,7 @@ class FocalLoss(torch.nn.Module):
 
     def forward(self, inputs, targets):
         pred = inputs.sigmoid()
-        BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction = 'none')
+        BCE_loss = F.binary_cross_entropy(inputs, targets, reduction = 'none')
         alpha = targets * self.alpha + (1 - targets) *(1-self.alpha)
         pt = torch.where(targets == 1,pred,1 - pred)
         F_loss = alpha*(1-pt) ** self.gamma * BCE_loss
@@ -176,9 +176,9 @@ class FocalLoss(torch.nn.Module):
         return torch.mean(F_loss)
         #else:
          #   return F_loss
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+#import torch
+#import torch.nn as nn
+#import torch.nn.functional as F
 """
 
 class FocalLoss(torch.nn.Module):
@@ -193,7 +193,7 @@ class FocalLoss(torch.nn.Module):
         alpha_tensor = (1 - self.alpha) + targets * (2 * self.alpha - 1)  # alpha if target = 1 and 1 - alpha if target = 0
         f_loss = alpha_tensor * (1 - p_t) ** self.gamma * bce_loss
         return f_loss.mean()
-
+"""
     #pred_mask = torch.sigmoid(prediction[:, 0])
         
     #mask_loss = mask * ((1-pred_mask)**gamma)* torch.log(pred_mask+1e-12)\
@@ -221,7 +221,7 @@ def train(args):
     optimizer2 = torch.optim.Adam(model.parameters(),lr = 1e-5)
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     optimizer = torch.optim.SGD(model.parameters(),lr = 1e-6,momentum = 0.9,weight_decay = 1e-3)
-    n_epochs = 20
+    n_epochs = 70
     train_global_step = 0
     
     dataset = DetectionSuperTuxDataset(dataset_path2,
@@ -231,7 +231,7 @@ def train(args):
     #fl1 = FocalLoss(alpha = 0.03)
     #fl2 = FocalLoss(alpha = 0.01)
     #fl3 = FocalLoss(alpha = 0.01)
-    fl = FocalLoss(alpha = 0.04)
+    fl = FocalLoss(alpha = 0.96)
   
     #learn = cnn_learner(data, models.resnet50, metrics=[accuracy]).to_fp16()
     #weight1 = torch.ones(3,96,128).to(device)
@@ -266,7 +266,7 @@ def train(args):
 
             output = model(train_data)
 
-            
+            loss = fl(output,train_label).float()
             #loss1 =  fl1(output[0],train_label[0]).float()
             #loss2 =  fl2(output[1],train_label[1]).float()
             #loss3 =  fl3(output[2],train_label[2]).float()
