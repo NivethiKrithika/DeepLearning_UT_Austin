@@ -11,6 +11,8 @@ dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'dense_data','train')
 dataset_path3 = os.path.join(dir,'dense_data','valid')
 
+#print(weights2)
+
 def train(args):
     from os import path
     model = FCN()
@@ -25,6 +27,12 @@ def train(args):
     #transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
     train_loader = load_dense_data(dataset_path2,transform = transform2)
     valid_loader = load_dense_data(dataset_path3,batch_size = 128)
+    weight_tensor = torch.from_numpy(np.array(DENSE_CLASS_DISTRIBUTION)).float()
+    
+    weights3 = 1/weight_tensor
+    weights4 = weights3/weights3.sum()
+    weights4 = weights4.to(device)
+    #tmp2 = torch.tensor(a_list, dtype=torch.int)
     #dataset = SuperTuxDataset(dataset_path,transform = transforms)
     #train_logger, valid_logger = None, None
     #if args.log_dir is not None:
@@ -36,12 +44,13 @@ def train(args):
      #   train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
       #  valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
     #optimizer = torch.optim.Adam(model.parameters(),lr = 0.0003)
+    #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9)
     
     scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 15,gamma = 0.9)
-    n_epochs = 50
+    n_epochs = 100
     train_global_step = 0
-    loss = torch.nn.CrossEntropyLoss()
+    loss = torch.nn.CrossEntropyLoss(weight = weights4)
     print(optimizer.param_groups[0]['lr'])
     for iter in range(n_epochs):
         model.train()
@@ -97,7 +106,7 @@ def train(args):
                 c.add(model(img.to(device)).argmax(1), label.to(device))
             print("global accuracy is {}".format(c.global_accuracy))
             print("iou is {}".format(c.iou))
-            if((c.iou > 0.565) and (c.global_accuracy > 0.86 )):
+            if((c.iou > 0.56) and (c.global_accuracy > 0.86 )):
                 break
             scheduler.step()
             #for i, valid_batch in enumerate(valid_loader):
