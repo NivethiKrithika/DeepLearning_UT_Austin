@@ -119,7 +119,8 @@ class FCN(torch.nn.Module):
 
         
     def forward(self,x):
-        x = x.to(device)
+        #x = x.to(device)
+        #print(x.device)
         padding_done = 0
         padded_oh = 0
         padded_ow = 0
@@ -134,13 +135,14 @@ class FCN(torch.nn.Module):
             padded_oh = oh
             x = F.pad(x, (0, padh,0, padw), value =0)
         
-        mean = torch.Tensor([0.485, 0.456, 0.406]).to(device)
-        mean_mod = mean[None,:,None,None].to(device)
-        x = x - mean_mod
+        mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
+        std= torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
+        #mean_mod = mean[None,:,None,None].to(device)
+        x = (x - mean[None,:,None,None])/std[None,:,None,None]
         #print("mean is  {}".format(x))
-        std= torch.Tensor([0.229, 0.224, 0.225]).to(device)
-        std_mod =std[None,:,None,None].to(device)
-        x = x/std_mod
+        
+        #std_mod =std[None,:,None,None].to(device)
+        #x = x/std_mod
         first_res = self.first_conv(x)
         max_pool_first = self.pool(first_res)
         #print("max_y shape is {}".format(max_pool_first.shape))
