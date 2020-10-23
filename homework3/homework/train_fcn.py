@@ -21,7 +21,7 @@ def train(args):
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     validation_accuracies = []
-    transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.2, hue=0.1),
+    transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.3, hue=0.3),
                                                          dense_transforms.RandomHorizontalFlip(),
                                                          dense_transforms.ToTensor()])
     #transforms = do_transform(horizontalFlip =True,randomCrop =None,colourjitter = False,resize = None)
@@ -47,7 +47,7 @@ def train(args):
     #scheduler =  torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,'max',patience = 10)
     optimizer = torch.optim.SGD(model.parameters(),lr = 0.01,momentum = 0.9)
     
-    scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 15,gamma = 0.9)
+    scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 30,gamma = 0.9)
     n_epochs = 100
     train_global_step = 0
     loss = torch.nn.CrossEntropyLoss(weight = weights4)
