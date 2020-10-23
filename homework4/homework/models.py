@@ -55,11 +55,11 @@ class Detector(torch.nn.Module):
     class construct_layer(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()
-            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1,bias = False),
+            self.concat_layers = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
                                                      torch.nn.Dropout(p = 0.1),
-                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1,bias = False),
+                                                     torch.nn.Conv2d(out_channels,out_channels,3,padding = 1,stride = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU(),
                                                      torch.nn.Dropout(p = 0.1))
@@ -70,7 +70,7 @@ class Detector(torch.nn.Module):
     class up_conv(torch.nn.Module):
         def __init__(self,in_channels,out_channels):
             super().__init__()  
-            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1,bias = False),
+            self.concat_layers1 = torch.nn.Sequential(torch.nn.ConvTranspose2d(in_channels,out_channels,3,padding = 1,stride =2,output_padding = 1),
                                                      torch.nn.BatchNorm2d(out_channels),
                                                      torch.nn.ReLU())
             #self.concat_layers1 = torch.nn.Sequential(torch.nn.Upsample(mode='bilinear', scale_factor=2),
@@ -98,7 +98,7 @@ class Detector(torch.nn.Module):
         self.first_up_conv = self.up_conv(256,128)
         self.second_up_conv = self.up_conv(256,64)
         self.third_up_conv = self.up_conv(128,3)
-        self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1,bias = -2.19)
+        self.out_conv  = torch.nn.Conv2d(3,3,kernel_size = 1)
         self.pool = torch.nn.MaxPool2d(2)
         self.sig_layer =torch.nn.Sigmoid()
         self.batch_norm = torch.nn.BatchNorm2d(3)
