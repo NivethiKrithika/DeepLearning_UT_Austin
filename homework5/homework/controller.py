@@ -10,11 +10,12 @@ def control(aim_point, current_vel):
     """
     x_points = [0]
     y_points = [0]
+    orient = [0]
     action = pystk.Action()
-    steer1 = (y_points - aim_point[1])/current_vel
-    steer_angle1 = math.asin(steer1)
-    steer2  = (x_points - aim_point[0])/current_vel
-    steer_angle2 = math.acos(steer2)   
+    adj = y_points[-1] - aim_point[1]     
+    opp = x_points[-1] - aim_point[0]
+    steer_angle = math.atan(opp/adj)
+    print("steer angle is {}".format(steer_angle))
     print("velocity is {}".format(current_vel))
     print("aim point is {}".format(aim_point))
     """
