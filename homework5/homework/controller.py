@@ -1,5 +1,5 @@
 import pystk
-
+import math
 
 def control(aim_point, current_vel):
     """
@@ -8,8 +8,15 @@ def control(aim_point, current_vel):
     :param current_vel: Current velocity of the kart
     :return: a pystk.Action (set acceleration, brake, steer, drift)
     """
+    x_points = [0]
+    y_points = [0]
     action = pystk.Action()
-
+    steer1 = (y_points - aim_point[1])/current_vel
+    steer_angle1 = math.asin(steer1)
+    steer2  = (x_points - aim_point[0])/current_vel
+    steer_angle2 = math.acos(steer2)   
+    print("velocity is {}".format(current_vel))
+    print("aim point is {}".format(aim_point))
     """
     Your code here
     Hint: Use action.acceleration (0..1) to change the velocity. Try targeting a target_velocity (e.g. 20).
@@ -29,7 +36,7 @@ if __name__ == '__main__':
         import numpy as np
         pytux = PyTux()
         for t in args.track:
-            steps, how_far = pytux.rollout(t, control, max_frames=1000, verbose=args.verbose)
+            steps, how_far = pytux.rollout(t, control, max_frames=2, verbose=args.verbose)
             print(steps, how_far)
         pytux.close()
 
