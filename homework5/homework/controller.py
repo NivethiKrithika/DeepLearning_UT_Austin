@@ -13,11 +13,16 @@ def control(aim_point, current_vel):
     orient = [0]
     action = pystk.Action()
     adj = aim_point[1] -y_points[-1]     
-    opp = x_points[-1] - aim_point[0]
+    opp = aim_point[0] - x_points[-1]
     steer_angle = math.atan(opp/adj)
     print("steer angle is {}".format(steer_angle))
     print("velocity is {}".format(current_vel))
     print("aim point is {}".format(aim_point))
+    action.steer = steer_angle
+    action.accleration = 0
+    if((steer_angle > 1) or (steer_angle < -1)):
+      action.drift = True
+    action.brake = False
     """
     Your code here
     Hint: Use action.acceleration (0..1) to change the velocity. Try targeting a target_velocity (e.g. 20).
