@@ -12,7 +12,7 @@ def control(aim_point, current_vel):
     y_points = [0]
     orient = [0]
     action = pystk.Action()
-    adj = y_points[-1] - aim_point[1]     
+    adj = aim_point[1] -y_points[-1]     
     opp = x_points[-1] - aim_point[0]
     steer_angle = math.atan(opp/adj)
     print("steer angle is {}".format(steer_angle))
