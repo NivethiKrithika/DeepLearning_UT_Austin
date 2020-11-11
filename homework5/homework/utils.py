@@ -16,7 +16,7 @@ class SuperTuxDataset(Dataset):
         from glob import glob
         from os import path
         self.data = []
-        for f in glob(path.join(dataset_path, '*.csv')):
+        for f in sorted(glob(path.join(dataset_path, '*.csv'))):
             i = Image.open(f.replace('.csv', '.png'))
             i.load()
             self.data.append((i, np.loadtxt(f, dtype=np.float32, delimiter=',')))
