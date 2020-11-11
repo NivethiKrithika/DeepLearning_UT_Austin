@@ -103,7 +103,7 @@ if __name__ == '__main__':
         import numpy as np
         pytux = PyTux()
         for t in args.track:
-            steps, how_far = pytux.rollout(t, control, max_frames=2, verbose=args.verbose)
+            steps, how_far = pytux.rollout(t, control, max_frames=1000, verbose=args.verbose)
             print(steps, how_far)
         pytux.close()
 
