@@ -91,7 +91,7 @@ class Planner(torch.nn.Module):
             # Add the skip connection
             if self.use_skip:
                 z = torch.cat([z, up_activation[i]], dim=1)
-        return spatial_argmax(self.classifier(z))
+        return spatial_argmax(sef.sig_layer(self.classifier(z)))
         
 
 def save_model(model):
