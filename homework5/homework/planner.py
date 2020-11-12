@@ -43,6 +43,10 @@ class CNNClassifier(torch.nn.Module):
         self.network = torch.nn.Sequential(*L)
         self.classifier = torch.nn.Linear(c, n_output_channels)
 
+    def forward(self, x):	
+        z = self.network((x - self.input_mean[None, :, None, None].to(x.device)) / self.input_std[None, :, None, None].to(x.device))	
+        return self.classifier(z.mean(dim=[2, 3]))
+
 
 
 class Planner(torch.nn.Module):
@@ -91,7 +95,11 @@ class Planner(torch.nn.Module):
             # Add the skip connection
             if self.use_skip:
                 z = torch.cat([z, up_activation[i]], dim=1)
-        return spatial_argmax(sef.sig_layer(self.classifier(z)))
+        #print(z.shape)
+        h = self.classifier(z)
+        h = torch.squeeze(h,1)
+        #print(h.shape)
+        return spatial_argmax(self.sig_layer(h))
         
 
 def save_model(model):
