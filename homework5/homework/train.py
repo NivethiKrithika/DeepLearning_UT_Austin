@@ -9,7 +9,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 import os
 dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'drive_data')
-
+from .utils import PyTux
 
 def train(args):
     from os import path
@@ -34,9 +34,10 @@ def train(args):
     #fl = FocalLoss1()
                                                                        
     batch_size = 128
-    
+    pytux = PyTux()
     for iter in range(n_epochs):
         model.train()
+        
         total_loss = []
         print("epoch is {}".format(iter))
         #list_output_train = []
@@ -47,23 +48,26 @@ def train(args):
             train_label = train_label.to(device)
             #list_output_train.append(output)
             #list_label_train.append(train_label)
+            #print(train_data.shape)
+            #print(train_label.shape)
             output = model(train_data)
             computed_loss = criterion(output,train_label).float()
-            total_loss.append(computed_loss)
+            #print(computed_loss)
+            total_loss.append(computed_loss.item())
             computed_loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            train_global_step +=1
+            #train_global_step +=1
 
-        print("loss is {}".format(np.mean(total_loss).np()))
+        print("loss is {}".format(np.mean(np.array(total_loss))))
         model.eval()
         with torch.no_grad():
           if(iter % 5 == 0):
-            pytux = PyTux()
-            steps1, how_far1 = pytux.rollout('zengarden', control, max_frames=1000,planner = True, verbose=args.verbose)
+            
+            steps1, how_far1 = pytux.rollout('zengarden', control, max_frames=1000,planner = model)
             print("steps is {}".format(steps1))
             print("how far is {}".format(how_far1))
-            pytux.close()            
+    pytux.close()            
 
 
 
