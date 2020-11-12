@@ -4,13 +4,66 @@ import torch.utils.tensorboard as tb
 import numpy as np
 from .utils import load_data
 from . import dense_transforms
+from .controller import control
+import os
+dataset_path2 = os.path.join(dir,'drive_data')
+
 
 def train(args):
     from os import path
     model = Planner()
-    train_logger, valid_logger = None, None
+    model = model.to(device)
+    transform2 = dense_transforms.Compose([dense_transforms.ColorJitter(brightness=0.9, contrast=0.9, saturation=0.9, hue=0.1),
+                                                        dense_transforms.RandomHorizontalFlip(),
+                                                        dense_transforms.ToTensor()])
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'))
+        valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'))
+    optimizer = torch.optim.Adam(model.parameters(),lr = 1e-3)
+    scheduler =  torch.optim.lr_scheduler.StepLR(optimizer,step_size = 50,gamma = 0.9)
+
+    n_epochs = 200
+    
+    #dataset = SuperTuxDataset(dataset_path2,
+     #                                  transform=transform2)
+    train_loader = load_data(dataset_path2,transform = transform2)
+
+    criterion = torch.nn.MSELoss()
+    fl = FocalLoss1()
+                                                                       
+    batch_size = 128
+    
+    for iter in range(n_epochs):
+        model.train()
+        total_loss = []
+        print("epoch is {}".format(iter))
+        #list_output_train = []
+        #list_label_train = []
+        for i,batch in enumerate(train_loader):
+            train_data,train_label = batch 
+            train_data = train_data.to(device)
+            train_label = train_label.to(device)
+            #list_output_train.append(output)
+            #list_label_train.append(train_label)
+            computed_loss = loss(output,train_label.long()).float()
+            total_loss.append(computed_loss)
+            computed_loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            train_global_step +=1
+
+        print("loss is {}".format(np.mean(total_loss).np()))
+        model.eval()
+        with torch.no_grad():
+          if(iter % 5 == 0):
+            pytux = PyTux()
+            steps1, how_far1 = pytux.rollout('zengarden', control, max_frames=1000,planner = True, verbose=args.verbose)
+            print("steps is {}".format(steps1))
+            print("how far is {}".format(how_far1))
+            pytux.close()            
+
+
+
 
     """
     Your code here, modify your HW4 code
