@@ -5,7 +5,9 @@ import numpy as np
 from .utils import load_data
 from . import dense_transforms
 from .controller import control
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 import os
+dir = os.path.dirname(os.path.abspath("__file__"))
 dataset_path2 = os.path.join(dir,'drive_data')
 
 
@@ -29,7 +31,7 @@ def train(args):
     train_loader = load_data(dataset_path2,transform = transform2)
 
     criterion = torch.nn.MSELoss()
-    fl = FocalLoss1()
+    #fl = FocalLoss1()
                                                                        
     batch_size = 128
     
