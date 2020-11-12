@@ -80,7 +80,6 @@ class Planner(torch.nn.Module):
         self.sig_layer = torch.nn.Sigmoid()
 
     def forward(self, x):
-       
         z = (x - self.input_mean[None, :, None, None].to(x.device)) / self.input_std[None, :, None, None].to(x.device)
         up_activation = []
         for i in range(self.n_conv):
@@ -95,10 +94,8 @@ class Planner(torch.nn.Module):
             # Add the skip connection
             if self.use_skip:
                 z = torch.cat([z, up_activation[i]], dim=1)
-        #print(z.shape)
         h = self.classifier(z)
         h = torch.squeeze(h,1)
-        #print(h.shape)
         return spatial_argmax(self.sig_layer(h))
         
 
