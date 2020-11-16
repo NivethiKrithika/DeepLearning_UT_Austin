@@ -3,6 +3,13 @@ from . import utils
 
 
 def log_likelihood(model: LanguageModel, some_text: str):
+    print("model is {}text is{} ".format(model,some_text))
+    a = model.predict_all(some_text)
+    print(a.shape)
+    print(a)
+    s = utils.one_hot(some_text)
+    print(s.shape)
+    print(s)
     """
     Your code here
 
