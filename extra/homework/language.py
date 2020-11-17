@@ -5,11 +5,20 @@ from . import utils
 def log_likelihood(model: LanguageModel, some_text: str):
     print("model is {}text is{} ".format(model,some_text))
     a = model.predict_all(some_text)
-    print(a.shape)
+    #print(a.shape)
     print(a)
+    #b = -a
     s = utils.one_hot(some_text)
-    print(s.shape)
-    print(s)
+    t= a[:,:-1]*(s)
+    return t.sum()
+    #print(s.shape)
+    #print(s)
+    #print("sum is {}".format(b.sum()))
+    #return b.sum()
+    #print (b)
+    s = utils.one_hot(some_text)
+    #print(s.shape)
+    #print(s)
     """
     Your code here
 
