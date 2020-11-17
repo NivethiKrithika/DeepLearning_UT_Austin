@@ -1,7 +1,7 @@
 import torch
 
 from . import utils
-
+from torch.nn.utils import weight_norm
 
 class LanguageModel(object):
     def predict_all(self, some_text):
@@ -62,45 +62,53 @@ class AdjacentLanguageModel(LanguageModel):
 class TCN(torch.nn.Module, LanguageModel):
     class CausalConv1dBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels, kernel_size, dilation):
-          block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation),
-                                      torch.nn.ReLU())
+          super().__init__()
+          self.block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
+                                      weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.ReLU(),
+                                      torch.nn.Dropout(p = 0.1),
+                                      torch.nn.ConstantPad1d((2*dilation,0),0),
+                                      weight_norm(torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.ReLU(),
+                                      torch.nn.Dropout(p = 0.1))
 
           self.down_size = None
-          self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
-                                                 torch.nn.BatchNorm2d(out_channels)) 
+          self.down_size = torch.nn.Sequential(torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1),
+                                                 torch.nn.BatchNorm1d(out_channels)) 
 
 
-            """
-            Your code here.
-            Implement a Causal convolution followed by a non-linearity (e.g. ReLU).
-            Optionally, repeat this pattern a few times and add in a residual block
-            :param in_channels: Conv1d parameter
-            :param out_channels: Conv1d parameter
-            :param kernel_size: Conv1d parameter
-            :param dilation: Conv1d parameter
-            """
-            #raise NotImplementedError('CausalConv1dBlock.__init__')
+          """
+          Your code here.
+          Implement a Causal convolution followed by a non-linearity (e.g. ReLU).
+          Optionally, repeat this pattern a few times and add in a residual block
+          :param in_channels: Conv1d parameter
+          :param out_channels: Conv1d parameter
+          :param kernel_size: Conv1d parameter
+          :param dilation: Conv1d parameter
+          """
+          #raise NotImplementedError('CausalConv1dBlock.__init__')
 
         def forward(self, x):
             identity = x
             if(self.down_size):
                 identity = self.down_size(x)
-            return self.concat_layers(x) + identity
+            return self.block(x) + identity
             raise NotImplementedError('CausalConv1dBlock.forward')
 
     def __init__(self):
+        super().__init__()
         layers = []
         c = 28
         L = [28,32,40,50]
         dilation1 = 1
         for out_channels in L:
-            layers.append(self.Block(c,out_channels,1,dilation = dilation1))
+            layers.append(self.CausalConv1dBlock(c,out_channels,3,dilation = dilation1))
             c = out_channels
             dilation1 = dilation1 * 2
         self.final_layers = torch.nn.Sequential(*layers)
-        self.classifier = torch.nn.Linear(c,28)
-        self.soft = torch.nn.Softmax()
+        self.final_most = torch.nn.Conv1d(c,29,1)
+        #self.classifier = torch.nn.Linear(c,28)
+        self.soft = torch.nn.Softmax(dim = 1)
         """
         Your code here
 
@@ -111,9 +119,11 @@ class TCN(torch.nn.Module, LanguageModel):
         #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
+        #print(x.shape)
         z = self.final_layers(x)
+        print(z.shape)
         #z = z.mean([2,3])
-        return (self.soft(self.classifier(z.view(z.size(0),-1))))
+        return (self.soft(self.final_most(z)))
         """
         Your code here
         Return the logit for the next character for prediction for any substring of x
