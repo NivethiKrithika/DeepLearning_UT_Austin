@@ -98,7 +98,9 @@ class TCN(torch.nn.Module, LanguageModel):
             layers.append(self.Block(c,out_channels,1,dilation = dilation1))
             c = out_channels
             dilation1 = dilation1 * 2
+        self.final_layers = torch.nn.Sequential(*layers)
         self.classifier = torch.nn.Linear(c,28)
+        self.soft = torch.nn.Softmax()
         """
         Your code here
 
@@ -109,6 +111,9 @@ class TCN(torch.nn.Module, LanguageModel):
         #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
+        z = self.final_layers(x)
+        #z = z.mean([2,3])
+        return (self.soft(self.classifier(z.view(z.size(0),-1))))
         """
         Your code here
         Return the logit for the next character for prediction for any substring of x
