@@ -62,6 +62,15 @@ class AdjacentLanguageModel(LanguageModel):
 class TCN(torch.nn.Module, LanguageModel):
     class CausalConv1dBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels, kernel_size, dilation):
+          block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
+                                      torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation),
+                                      torch.nn.ReLU())
+
+          self.down_size = None
+          self.down_size = torch.nn.Sequential(torch.nn.Conv2d(in_channels,out_channels,kernel_size = 1,stride = stride),
+                                                 torch.nn.BatchNorm2d(out_channels)) 
+
+
             """
             Your code here.
             Implement a Causal convolution followed by a non-linearity (e.g. ReLU).
@@ -71,12 +80,25 @@ class TCN(torch.nn.Module, LanguageModel):
             :param kernel_size: Conv1d parameter
             :param dilation: Conv1d parameter
             """
-            raise NotImplementedError('CausalConv1dBlock.__init__')
+            #raise NotImplementedError('CausalConv1dBlock.__init__')
 
         def forward(self, x):
+            identity = x
+            if(self.down_size):
+                identity = self.down_size(x)
+            return self.concat_layers(x) + identity
             raise NotImplementedError('CausalConv1dBlock.forward')
 
     def __init__(self):
+        layers = []
+        c = 28
+        L = [28,32,40,50]
+        dilation1 = 1
+        for out_channels in L:
+            layers.append(self.Block(c,out_channels,1,dilation = dilation1))
+            c = out_channels
+            dilation1 = dilation1 * 2
+        self.classifier = torch.nn.Linear(c,28)
         """
         Your code here
 
@@ -84,7 +106,7 @@ class TCN(torch.nn.Module, LanguageModel):
         Hint: The probability of the first character should be a parameter
         use torch.nn.Parameter to explicitly create it.
         """
-        raise NotImplementedError('TCN.__init__')
+        #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
         """
