@@ -1,7 +1,7 @@
 from .models import LanguageModel, AdjacentLanguageModel, Bigram, load_model
 from . import utils
-
-
+import torch
+char_set =['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','.']
 def log_likelihood(model: LanguageModel, some_text: str):
     print("model is {}text is{} ".format(model,some_text))
     a = model.predict_all(some_text)
@@ -34,6 +34,23 @@ def log_likelihood(model: LanguageModel, some_text: str):
 
 
 def sample_random(model: LanguageModel, max_length: int = 100):
+    
+    S = list("")
+    for i in range(max_length):
+      #data = utils.one_hot(S)
+      #print(data.shape)
+      o = model.predict_all(S)
+      print(o)
+      y = torch.nn.Softmax(dim = 1)
+      print(o.shape)
+      o = y(o)
+      print (o)   
+      s = torch.distributions.Categorical(logits = o).sample()
+      print(s)
+      S.append(char_set[s])
+      if (char_set[s] == '.'):
+        break
+    print(S)
     """
     Your code here.
 
