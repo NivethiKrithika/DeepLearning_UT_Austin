@@ -35,22 +35,28 @@ def log_likelihood(model: LanguageModel, some_text: str):
 
 def sample_random(model: LanguageModel, max_length: int = 100):
     
-    S = list("")
+    S = ""
     for i in range(max_length):
       #data = utils.one_hot(S)
       #print(data.shape)
       o = model.predict_all(S)
       print(o)
-      y = torch.nn.Softmax(dim = 1)
-      print(o.shape)
-      o = y(o)
-      print (o)   
-      s = torch.distributions.Categorical(logits = o).sample()
+      y = torch.nn.Softmax()
+      print(torch.squeeze(o).shape)
+      o = y(torch.squeeze(o))
+      #print(o)
+      print ("o shape is  {}".format(o.shape))
+      print("o[-1] shape is {}".format(o[-1].shape))   
+      if(i == 0):
+          s = torch.distributions.Categorical(logits = o).sample()
+      else:
+          s = torch.distributions.Categorical(logits = o[-1]).sample()
       print(s)
-      S.append(char_set[s])
-      if (char_set[s] == '.'):
+      print("char is {}".format(char_set[s.item()]))
+      S = S+(char_set[s.item()])
+      if (char_set[s.item()] == '.'):
         break
-    print(S)
+      print(S)
     """
     Your code here.
 
