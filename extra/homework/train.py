@@ -3,47 +3,65 @@ import torch.nn as nn
 from .models import TCN, save_model
 from .utils import SpeechDataset, one_hot
 from . import utils
+import random
+import os
+import numpy as np
+def seed_torch(seed=1029):
+  random.seed(seed)
+  os.environ['PYTHONHASHSEED'] = str(seed)
+  np.random.seed(seed)
+  torch.manual_seed(seed)
+  torch.cuda.manual_seed(seed)
+  torch.backends.cudnn.enabled = False
+  torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+  torch.backends.cudnn.benchmark = False
+  torch.backends.cudnn.deterministic = True
 
 def train(args):
     from os import path
     import torch.utils.tensorboard as tb
-    model = TCN()
+    seed_torch()
+    model1 = TCN()
     max_len1 = 26
     train_logger, valid_logger = None, None
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     data1 = SpeechDataset('data/train.txt',transform = one_hot,max_len = max_len1)
-    permutation = torch.randperm(25000)
-    #oneh = utils.one_hot(data1)
-    #print(oneh.shape)
+    
     print(len(data1))
-    #print(len(data1))
     batch_size = 128
-    for i in range(0,len(permutation)-batch_size+1,batch_size):
-            model.train()
+    criterion = torch.nn.CrossEntropyLoss()
+    n_epochs = 20
+    optimizer = torch.optim.SGD(model1.parameters(),lr = 1e-3,momentum = 0.9,weight_decay = 1e-5)
+    for iter in range(n_epochs):
+        permutation = torch.randperm(25000)
+        for i in range(0,len(permutation)-batch_size+1,batch_size):
+            model1.train()
             batch = permutation[i:i+batch_size]
             t_list =[]
             t_label = []
             for j in batch:
                 data = data1[j]
-                #print(data[:,0:-1].shape)
-                #print(data[:,-1].shape)
-                #data =img
-                t_list.append(data[:,0:-1])
+                t_list.append(data)
                 label = data[:,-1]
                 t_label.append(label)
             train_data = torch.stack(t_list)
-            #print(train_data.shape)
             train_label = torch.stack(t_label)
+            output = model1(train_data)
+            #print(output[:,:,-1].shape)
             #print(train_label.shape)
-            #train_data = train_data.to(device)
-            #train_label = train_label.to(device)
-            #output = model(train_data)
-            string1 = "Hello"
-            output1 = model.predict_all(string1)
-            print(output1.shape)
-
+            loss = criterion(output[:,:,-1],train_label.argmax(1))
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            print("loss is {}".format(loss))
+        lls = []
+        for s in train_data:
+            ll = model1.predict_all(s)
+            lls.append(float((ll[:, :-1]*utils.one_hot(s)).sum()/len(s)))
+        nll = -np.mean(lls)
+        print("nll is {}".format(nll))
 
 
     #print(data1[0:2])
