@@ -66,20 +66,20 @@ class TCN(torch.nn.Module, LanguageModel):
         def __init__(self, in_channels, out_channels, kernel_size, dilation):
           super().__init__()
           self.block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation),
+                                      weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation)),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1),
                                       torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation),
+                                      weight_norm(torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation)),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1))
-          self.block[1].weight.data.fill_(0.01)
+          #self.block[1].weight.data.fill_(0.01)
           #K = torch.Tensor([[1 ,0, -1],[2, 0 ,-2], [1, 0 ,-1]])
           #self.block[1].weight = torch.nn.Parameter(0.01)
 
           self.down_size = None
-          self.down_size = torch.nn.Sequential(torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1),
-                                                 torch.nn.BatchNorm1d(out_channels)) 
+          self.down_size = weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1))
+                                           #      torch.nn.BatchNorm1d(out_channels)) 
 
 
           """
@@ -99,7 +99,7 @@ class TCN(torch.nn.Module, LanguageModel):
             if(self.down_size):
                 identity = self.down_size(x)
                 #print("res size is {}".format(identity.shape))
-            return self.block(x) + identity
+            return self.block(x)
             raise NotImplementedError('CausalConv1dBlock.forward')
 
     def __init__(self):
@@ -147,7 +147,7 @@ class TCN(torch.nn.Module, LanguageModel):
         raise NotImplementedError('TCN.forward')
 
     def predict_all(self, some_text):
-        print("some_txt is {}".format(some_text))
+        #print("some_txt is {}".format(some_text))
         oneh = utils.one_hot(some_text)
         #print("input shape is {}".format(oneh.shape))
         t = self.m(oneh[None,:,:])
