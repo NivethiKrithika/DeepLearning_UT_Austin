@@ -8,7 +8,7 @@ def train(args):
     from os import path
     import torch.utils.tensorboard as tb
     model = TCN()
-    max_len1 = 25
+    max_len1 = 26
     train_logger, valid_logger = None, None
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
@@ -34,13 +34,15 @@ def train(args):
                 label = data[:,-1]
                 t_label.append(label)
             train_data = torch.stack(t_list)
-            print(train_data.shape)
+            #print(train_data.shape)
             train_label = torch.stack(t_label)
-            print(train_label.shape)
+            #print(train_label.shape)
             #train_data = train_data.to(device)
             #train_label = train_label.to(device)
-            output = model(train_data)
-            #print(output.shape)
+            #output = model(train_data)
+            string1 = "Hello"
+            output1 = model.predict_all(string1)
+            print(output1.shape)
 
 
 
