@@ -27,7 +27,8 @@ def train(args):
     if args.log_dir is not None:
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
-    data1 = SpeechDataset('data/train.txt',transform = one_hot,max_len = max_len1)
+    data1 = SpeechDataset('data/train.txt',transform = one_hot)
+    valid_data = SpeechDataset('data/train.txt')
     
     print(len(data1))
     batch_size = 128
@@ -36,7 +37,9 @@ def train(args):
     optimizer = torch.optim.SGD(model1.parameters(),lr = 1e-3,momentum = 0.9,weight_decay = 1e-5)
     for iter in range(n_epochs):
         permutation = torch.randperm(25000)
+        j = 0
         for i in range(0,len(permutation)-batch_size+1,batch_size):
+            j = j + 1
             model1.train()
             batch = permutation[i:i+batch_size]
             t_list =[]
@@ -55,9 +58,11 @@ def train(args):
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            print("loss is {}".format(loss))
+            if(j % 10 == 0):
+                print("loss is {}".format(loss))
+        model1.eval()
         lls = []
-        for s in train_data:
+        for s in valid_data:
             ll = model1.predict_all(s)
             lls.append(float((ll[:, :-1]*utils.one_hot(s)).sum()/len(s)))
         nll = -np.mean(lls)
