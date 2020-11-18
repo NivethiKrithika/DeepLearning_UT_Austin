@@ -2,6 +2,8 @@ import torch
 
 from . import utils
 from torch.nn.utils import weight_norm
+#def one_hot1():
+  #one_hot = (torch.randint(len(vocab), (b, 1, length)) == torch.arange(len(vocab))[None, :, None]).float()
 
 class LanguageModel(object):
     def predict_all(self, some_text):
@@ -64,13 +66,16 @@ class TCN(torch.nn.Module, LanguageModel):
         def __init__(self, in_channels, out_channels, kernel_size, dilation):
           super().__init__()
           self.block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1),
                                       torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      weight_norm(torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1))
+          self.block[1].weight.data.fill_(0.01)
+          #K = torch.Tensor([[1 ,0, -1],[2, 0 ,-2], [1, 0 ,-1]])
+          #self.block[1].weight = torch.nn.Parameter(0.01)
 
           self.down_size = None
           self.down_size = torch.nn.Sequential(torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1),
@@ -90,6 +95,7 @@ class TCN(torch.nn.Module, LanguageModel):
 
         def forward(self, x):
             identity = x
+            
             if(self.down_size):
                 identity = self.down_size(x)
                 #print("res size is {}".format(identity.shape))
@@ -141,15 +147,17 @@ class TCN(torch.nn.Module, LanguageModel):
         raise NotImplementedError('TCN.forward')
 
     def predict_all(self, some_text):
+        print("some_txt is {}".format(some_text))
         oneh = utils.one_hot(some_text)
-        print("input shape is {}".format(oneh.shape))
+        #print("input shape is {}".format(oneh.shape))
         t = self.m(oneh[None,:,:])
-        print("t shape is {}".format(t.shape))
+        #print("t shape is {}".format(t.shape))
         #print(t.shape)
         z = self.lsoft(self.final_most(self.final_layers(t)))
-        print("final shape is {}".format(z.shape))
+        #print("final shape is {}".format(z.shape))
+        #print("returned shape is  {}".format(torch.squeeze(z,0).shape))
         #print(torch.squeeze(z).shape)
-        return(torch.squeeze(z))
+        return(torch.squeeze(z,0))
         """
         Your code here
 
