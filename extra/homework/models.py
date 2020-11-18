@@ -92,6 +92,7 @@ class TCN(torch.nn.Module, LanguageModel):
             identity = x
             if(self.down_size):
                 identity = self.down_size(x)
+                #print("res size is {}".format(identity.shape))
             return self.block(x) + identity
             raise NotImplementedError('CausalConv1dBlock.forward')
 
@@ -106,9 +107,12 @@ class TCN(torch.nn.Module, LanguageModel):
             c = out_channels
             dilation1 = dilation1 * 2
         self.final_layers = torch.nn.Sequential(*layers)
-        self.final_most = torch.nn.Conv1d(c,29,1)
+        self.final_most = torch.nn.Conv1d(c,28,1)
         #self.classifier = torch.nn.Linear(c,28)
         self.soft = torch.nn.Softmax(dim = 1)
+        self.m = torch.nn.ConstantPad1d((0, 1), 0)
+        self.sig_layer = torch.nn.Sigmoid()
+        self.lsoft = torch.nn.LogSoftmax(dim = 1)
         """
         Your code here
 
@@ -119,9 +123,12 @@ class TCN(torch.nn.Module, LanguageModel):
         #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
-        #print(x.shape)
-        z = self.final_layers(x)
-        print(z.shape)
+        #print("x shape is {}".format(x.shape))
+        t = self.m(x)
+        #print("t shape is {}".format(t.shape))
+        #print(t.shape)
+        z = self.final_layers(t)
+        #print(z.shape)
         #z = z.mean([2,3])
         return (self.soft(self.final_most(z)))
         """
@@ -134,13 +141,22 @@ class TCN(torch.nn.Module, LanguageModel):
         raise NotImplementedError('TCN.forward')
 
     def predict_all(self, some_text):
+        oneh = utils.one_hot(some_text)
+        print("input shape is {}".format(oneh.shape))
+        t = self.m(oneh[None,:,:])
+        print("t shape is {}".format(t.shape))
+        #print(t.shape)
+        z = self.lsoft(self.final_most(self.final_layers(t)))
+        print("final shape is {}".format(z.shape))
+        #print(torch.squeeze(z).shape)
+        return(torch.squeeze(z))
         """
         Your code here
 
         @some_text: a string
         @return torch.Tensor((vocab_size, len(some_text)+1)) of log-likelihoods (not logits!)
         """
-        raise NotImplementedError('TCN.predict_all')
+        #raise NotImplementedError('TCN.predict_all')
 
 
 def save_model(model):
