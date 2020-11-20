@@ -123,7 +123,8 @@ class PyTux:
 
             if planner:
                 image = np.array(self.k.render_data[0].image)
-                aim_point_image = planner(TF.to_tensor(image)[None]).squeeze(0).cpu().detach().numpy()
+                aim_point_image = planner((TF.to_tensor(image)[None]).cuda()).squeeze(0).cpu().detach().numpy()
+          
 
             current_vel = np.linalg.norm(kart.velocity)
             action = controller(aim_point_image, current_vel)
