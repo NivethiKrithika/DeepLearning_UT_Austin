@@ -62,11 +62,25 @@ def train(args):
         print("loss is {}".format(np.mean(np.array(total_loss))))
         model.eval()
         with torch.no_grad():
-          if(iter % 5 == 0):
+          if(iter >10):
             
             steps1, how_far1 = pytux.rollout('zengarden', control, max_frames=1000,planner = model)
             print("steps is {}".format(steps1))
             print("how far is {}".format(how_far1))
+            steps2, how_far2 = pytux.rollout('hacienda', control, max_frames=1000,planner = model)
+            print("steps is {}".format(steps2))
+            print("how far is {}".format(how_far2))
+            steps3, how_far3 = pytux.rollout('snowtuxpeak', control, max_frames=1000,planner = model)
+            print("steps is {}".format(steps3))
+            print("how far is {}".format(how_far3))
+            steps4, how_far4 = pytux.rollout('scotland', control, max_frames=1000,planner = model)
+            print("steps is {}".format(steps4))
+            print("how far is {}".format(how_far4))
+            if((how_far1 >= 0.95) and (how_far2 >= 0.95) and (how_far3 >= 0.95) and (how_far4 >= 0.95)):
+              break
+            
+        #break      
+              
     pytux.close()            
 
 
