@@ -1,6 +1,6 @@
 import pystk
 import numpy as np
-
+import math
 
 class Player:
     def __init__(self, player, team=0):
@@ -14,6 +14,9 @@ class Player:
     def __call__(self, image, player_info):
         return self.player.act(image, player_info)
 
+def to_image(x, proj, view):
+    p = proj @ view @ np.array(list(x) + [1])
+    return np.clip(np.array([p[0] / p[-1], -p[1] / p[-1]]), -1, 1)
 
 class Tournament:
     _singleton = None
@@ -53,14 +56,22 @@ class Tournament:
             print('\rframe %d' % t, end='\r')
 
             state.update()
+            
 
             list_actions = []
             for i, p in enumerate(self.active_players):
                 player = state.players[i]
                 image = np.array(self.k.render_data[i].image)
+                puck_location = state.soccer.ball.location
                 
+                proj = np.array(player.camera.projection).T
+                view = np.array(player.camera.view).T
+                aim_point = to_image(puck_location,proj,view)
+                print("aim point is {}".format(aim_point))
+                #control(aim_point,np.linalg.norm(player.kart.velocity))
                 action = pystk.Action()
-                player_action = p(image, player)
+                #player_action = p(image, player)
+                player_action = control(aim_point,np.linalg.norm(player.kart.velocity))
                 for a in player_action:
                     setattr(action, a, player_action[a])
                 
@@ -86,3 +97,51 @@ class Tournament:
     def close(self):
         self.k.stop()
         del self.k
+
+
+
+def control(aim_point, current_vel):
+    """
+    Set the Action for the low-level controller
+    :param aim_point: Aim point, in screen coordinate frame [-1..1]
+    :param current_vel: Current velocity of the kart
+    :return: a pystk.Action (set acceleration, brake, steer, drift)
+    """
+
+    action = pystk.Action()
+    target_velocity  = 20
+    #target acceleration = 20/25
+    M_PI = 3.14
+
+    sin_steer_angle = -(aim_point[0]/aim_point[1])
+    #print("radius is {}".format(sin_steer_angle))
+    steer_angle = (math.atan(sin_steer_angle/0.32) * 180)/M_PI;
+    final_angle = steer_angle
+
+    if(final_angle > 60):
+      action.drift = 1
+    steer_angle_fraction = final_angle/90
+
+    
+    action.steer = steer_angle_fraction
+    if(current_vel >= target_velocity):
+      action.acceleration = 0
+      
+    else:
+      acceler = 1
+      action.acceleration = acceler
+    #print("acceleration is {}".format(action.acceleration)) 
+    
+    
+    if(action.acceleration > 0):
+      action.nitro = 1
+    else:
+      action.nitro = 0
+
+  
+    action.brake = False
+    
+
+    action1 = {'acceleration': action.acceleration, 'brake': action.brake, 'drift': action.drift, 'nitro': action.nitro, 'rescue': False, 'steer': action.steer}
+
+    return action1
