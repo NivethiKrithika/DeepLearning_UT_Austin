@@ -1,6 +1,7 @@
 import pystk
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 class Player:
     def __init__(self, player, team=0):
@@ -67,18 +68,40 @@ class Tournament:
                 proj = np.array(player.camera.projection).T
                 view = np.array(player.camera.view).T
                 aim_point = to_image(puck_location,proj,view)
-                print("aim point is {}".format(aim_point))
+                #print("aim point is {}".format(aim_point))
+                kart_location = player.kart.location
+
+                #kart_location_2 = state.players[i].kart.location
+
+                goal_line_1 = state.soccer.goal_line[1-i][0]
+
+                goal_line_2 = state.soccer.goal_line[1-i][1]
+                goal_line = (to_image(goal_line_1, proj, view)+to_image(goal_line_2, proj, view))/2
                 #control(aim_point,np.linalg.norm(player.kart.velocity))
                 action = pystk.Action()
                 #player_action = p(image, player)
-                player_action = control(aim_point,np.linalg.norm(player.kart.velocity))
+                player_action = control(aim_point,np.linalg.norm(player.kart.velocity),kart_location,goal_line)
                 for a in player_action:
                     setattr(action, a, player_action[a])
                 
                 list_actions.append(action)
+                fig, ax = plt.subplots(1, 1)
+
+                ax.imshow(image)
+
 
                 if save is not None:
                     PIL.Image.fromarray(image).save(os.path.join(save, 'player%02d_%05d.png' % (i, t)))
+                    WH2 = np.array([self.graphics_config.screen_width, self.graphics_config.screen_height]) / 2
+                    #ax.add_artist(plt.Circle(WH2*(1+to_image(kart_location_1, proj, view)), 10, ec='r', fill=False, lw=1.5))
+
+                    #ax.add_artist(plt.Circle(WH2*(1+to_image(kart_location_2, proj, view)), 10, ec='k', fill=False, lw=1.5))
+
+                    #ax.add_artist(plt.Circle(WH2*(1+to_image(player.kart.front, proj, view)), 10, ec='y', fill=False, lw=1.5))
+
+                    ax.add_artist(plt.Circle(WH2*(2+to_image(goal_line_1, proj, view)+to_image(goal_line_2, proj, view))/2, 10, ec='m', fill=False, lw=1.5))
+                    ax.add_artist(plt.Circle(WH2*(2+to_image(goal_line_1, proj, view)+to_image(goal_line_1, proj, view))/2, 10, ec='b', fill=False, lw=1.5))                    
+
 
             s = self.k.step(list_actions)
             if not s:  # Game over
@@ -100,7 +123,7 @@ class Tournament:
 
 
 
-def control(aim_point, current_vel):
+def control(aim_point, current_vel,kart_loc,goal_line):
     """
     Set the Action for the low-level controller
     :param aim_point: Aim point, in screen coordinate frame [-1..1]
@@ -108,10 +131,14 @@ def control(aim_point, current_vel):
     :return: a pystk.Action (set acceleration, brake, steer, drift)
     """
 
+    print("aim point is {}".format(aim_point))
+    print("kart location is {}".format(kart_loc))
+    print("goal line is {}".format(goal_line))
     action = pystk.Action()
     target_velocity  = 20
     #target acceleration = 20/25
     M_PI = 3.14
+    
 
     sin_steer_angle = -(aim_point[0]/aim_point[1])
     #print("radius is {}".format(sin_steer_angle))
@@ -124,6 +151,8 @@ def control(aim_point, current_vel):
 
     
     action.steer = steer_angle_fraction
+    #print("current vel is {}".format(current_vel))
+    #print("target vel is {}".format(target_velocity))
     if(current_vel >= target_velocity):
       action.acceleration = 0
       
@@ -137,11 +166,18 @@ def control(aim_point, current_vel):
       action.nitro = 1
     else:
       action.nitro = 0
-
-  
-    action.brake = False
     
+    action.drift = 0  
+    action.brake = False
+    if((aim_point[1] > 0) or aim_point[1] == 0):
+       action.brake = True
+       action.acceleration = 0
+       action.nitro= 0
+       action.drift = 0
+       print("Hitting")
 
+    #print(action.acceleration)
+    #print(action.brake)
     action1 = {'acceleration': action.acceleration, 'brake': action.brake, 'drift': action.drift, 'nitro': action.nitro, 'rescue': False, 'steer': action.steer}
 
     return action1
