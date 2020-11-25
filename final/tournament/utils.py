@@ -68,8 +68,9 @@ class Tournament:
                 proj = np.array(player.camera.projection).T
                 view = np.array(player.camera.view).T
                 aim_point = to_image(puck_location,proj,view)
+                front = to_image(player.kart.front,proj,view)
                 #print("aim point is {}".format(aim_point))
-                kart_location = player.kart.location
+                kart_location = to_image(player.kart.location,proj,view)
 
                 #kart_location_2 = state.players[i].kart.location
 
@@ -80,7 +81,7 @@ class Tournament:
                 #control(aim_point,np.linalg.norm(player.kart.velocity))
                 action = pystk.Action()
                 #player_action = p(image, player)
-                player_action = control(aim_point,np.linalg.norm(player.kart.velocity),kart_location,goal_line)
+                player_action = control(aim_point,np.linalg.norm(player.kart.velocity),kart_location,goal_line,front)
                 for a in player_action:
                     setattr(action, a, player_action[a])
                 
@@ -123,7 +124,7 @@ class Tournament:
 
 
 
-def control(aim_point, current_vel,kart_loc,goal_line):
+def control(aim_point, current_vel,kart_loc,goal_line,front):
     """
     Set the Action for the low-level controller
     :param aim_point: Aim point, in screen coordinate frame [-1..1]
@@ -132,9 +133,12 @@ def control(aim_point, current_vel,kart_loc,goal_line):
     """
 
     print("aim point is {}".format(aim_point))
-    print("kart location is {}".format(kart_loc))
-    print("goal line is {}".format(goal_line))
+    #print("kart location is {}".format(kart_loc))
+    #print("goal line is {}".format(goal_line))
+    print("front is {}".format(front))
     action = pystk.Action()
+    if(((aim_point[0] -front[0]) < 0.001) and ((aim_point[1]-front[1])<0.001)):
+      aim_point = goal_line
     target_velocity  = 20
     #target acceleration = 20/25
     M_PI = 3.14
