@@ -116,6 +116,7 @@ class TCN(torch.nn.Module, LanguageModel):
         self.final_most = torch.nn.Conv1d(c,28,1)
         #self.classifier = torch.nn.Linear(c,28)
         self.soft = torch.nn.Softmax(dim = 1)
+      
         self.m = torch.nn.ConstantPad1d((0, 1), 0)
         self.sig_layer = torch.nn.Sigmoid()
         self.lsoft = torch.nn.LogSoftmax(dim = 1)
@@ -129,14 +130,17 @@ class TCN(torch.nn.Module, LanguageModel):
         #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
-        #print("x shape is {}".format(x.shape))
-        t = self.m(x)
-        #print("t shape is {}".format(t.shape))
-        #print(t.shape)
-        z = self.final_layers(t)
-        #print(z.shape)
-        #z = z.mean([2,3])
-        return (self.soft(self.final_most(z)))
+        y1 = x
+        print("x shape is {}".format(x.shape))
+        if(x.size(2) == 0):
+          t = self.m(x)
+          z = self.final_layers(t)
+          return (self.soft(self.final_most(z)))
+        r = x[:,:,0]
+        x = torch.cat((r[:,:,None],x),dim = 2)
+        z = self.final_layers(x)
+        q = self.final_most(z)
+        return (self.lsoft(q))
         """
         Your code here
         Return the logit for the next character for prediction for any substring of x
@@ -149,11 +153,28 @@ class TCN(torch.nn.Module, LanguageModel):
     def predict_all(self, some_text):
         #print("some_txt is {}".format(some_text))
         oneh = utils.one_hot(some_text)
+        
         #print("input shape is {}".format(oneh.shape))
-        t = self.m(oneh[None,:,:])
+        #t = self.m(oneh[None,:,:])
+        t = oneh[None,:,:]
+        y2 = t
+        if(t.size(2)==0):
+          t = self.m(oneh[None,:,:])
+          z = self.lsoft(self.final_most(self.final_layers(t)))
+          return(torch.squeeze(z,0))
+
+         #  return (self.m(t))
+        s1 = t[:,:,0]
+        s2 = torch.cat((s1[:,:,None],t),dim = 2)
+        t1 = self.final_most(self.final_layers(s2))
+        
         #print("t shape is {}".format(t.shape))
         #print(t.shape)
-        z = self.lsoft(self.final_most(self.final_layers(t)))
+
+        #if(y2.size(2)== 0):
+         # z = self.lsoft(t1)
+        #else:  
+        z = self.lsoft(t1)
         #print("final shape is {}".format(z.shape))
         #print("returned shape is  {}".format(torch.squeeze(z,0).shape))
         #print(torch.squeeze(z).shape)
