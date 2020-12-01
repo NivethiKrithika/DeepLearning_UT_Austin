@@ -71,6 +71,7 @@ class Tournament:
         pos_player = state.players[0].kart.location
         #pos_player[0] = -4*pos_ball[0]
         pos_player = pos_ball
+        pos_player[0] = 5* pos_ball[0]
         pos_player[1] = -1.5*pos_ball[1]
         #pos_player[2] = pos_ball[2]
         
