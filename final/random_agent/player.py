@@ -65,30 +65,27 @@ class HockeyPlayer:
         else:
             self.kart_stuck_counter = 0
             return {'acceleration': 0, 'brake': False, 'drift': False, 'nitro': False, 'rescue': True, 'steer': 0}
-    def steer_towards_goal(self,x,y,puck_x,puck_y,wheelbase):
+    def steer_towards_goal(self,x,y,puck_x,puck_y,wheelbase,goal_end1x,goal_end1y, goal_end2x,goal_end2y):
         print("kart goal distance is {}".format(self.kart_goal_dp))
         print("x and y of goal are {} {}".format(x,y))
         print("puck x and y are {} {}".format(puck_x,puck_y))
         print("kart puck vector norm is {}".format(self.kart_puck_vec_norm))
         print("kart goal vec norm is  {}".format(self.kart_goal_vec_norm))
-        if(self.kart_puck_vec[1] > 7.0):
-          print("Hitting reverse")
-          return self.circle_drive(puck_x,puck_y)
-        else:
-          print("Hitting else")
-          steer_direction = np.sign(self.kart_goal_vec_norm[0])
-          tan_steer_angle = x/y
-          steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
-          print("steer angle is {}".format(steer_angle))
+        print("goal end points 1 are {}{}".format(goal_end1x,goal_end1y))
+        print("goal end points 2 are {}{}".format(goal_end2x,goal_end2y))
+        steer_direction = np.sign(self.kart_goal_vec_norm[0])
+        tan_steer_angle = self.kart_goal_vec_norm[1]/self.kart_goal_vec_norm[0]
+        steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
+        print("steer angle is {}".format(steer_angle))
         #final_angle = steer_angle
         #steer_angle_fraction = final_angle/90
         #b = y/2
         #y = b/2 # this is a heuristic of how far on the circle we wanna move per frame
         #x = (a + np.sign(x) * np.sqrt(r2 - (y - b)**2))*(4 if self.puck_is_close() else 2) # these are heuristic coefficients to allow for sufficient turn
         #acceleration = 0.75 if self.goal_is_close() else 1.0
-          acceleration = 0.10
-          action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': (abs(steer_angle)/90)* steer_direction}
-          return action
+        acceleration = 0.50
+        action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': (abs(steer_angle)/90)* steer_direction}
+        return action
         
     def act(self, image, player_info, state):
         # Perform 3D vecotr manipulation
@@ -117,7 +114,13 @@ class HockeyPlayer:
         self.kart_x, self.kart_y = to_image(player_info.kart.location, self.proj, self.view)
         self.goal_x, self.goal_y = (to_image(state.soccer.goal_line[1][0], self.proj, self.view) + 
                          to_image(state.soccer.goal_line[1][1], self.proj, self.view)) / 2
+        self.goal_end1_vec = np.array(state.soccer.goal_line[1][0]) - np.array(player_info.kart.location)
+        self.goal_end2_vec = np.array(state.soccer.goal_line[1][1]) - np.array(player_info.kart.location)
+        self.goal_end1_x,self.goal_end1_y = to_image(state.soccer.goal_line[1][0],self.proj,self.view)
+        self.goal_end2_x,self.goal_end2_y = to_image(state.soccer.goal_line[1][1],self.proj,self.view)
         self.current_vel = np.linalg.norm(player_info.kart.velocity)
+        print("goal end 1 vector is {}".format(self.goal_end1_vec))
+        print("goal end 2 vector is {}".format(self.goal_end2_vec))
         # puck_is_super_close =  np.sqrt(self.puck_x**2 + self.puck_y**2) < self.puck_super_close_thresh
         #if self.kart_is_stuck():
          #   return self.release_stuck()
@@ -128,7 +131,7 @@ class HockeyPlayer:
              #if self.puck_is_close() and self.goal_is_ahead():
                 # print("Hitting close here")
         #if self.goal_is_ahead():
-        return self.steer_towards_goal(self.goal_x, self.goal_y,self.puck_x,self.puck_y,player_info.kart.wheel_base)
+        return self.steer_towards_goal(self.goal_x, self.goal_y,self.puck_x,self.puck_y,player_info.kart.wheel_base,self.goal_end1_x,self.goal_end1_y,self.goal_end2_x,self.goal_end2_y)
             # else:
              #    return self.circle_drive(self.puck_x, self.puck_y)
         #else:
