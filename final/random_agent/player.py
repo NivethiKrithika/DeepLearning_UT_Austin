@@ -53,7 +53,8 @@ class HockeyPlayer:
         b = y/2
         y = b/2 # this is a heuristic of how far on the circle we wanna move per frame
         x = (a + np.sign(x) * np.sqrt(r2 - (y - b)**2))*(4 if self.goal_is_ahead() else 2) # these are heuristic coefficients to allow for sufficient turn
-        acceleration = 0.75 if self.goal_is_ahead() else 1.0
+        #acceleration = 0.75 if self.goal_is_ahead() else 1.0
+        acceleration = 0.40
         action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': x}
         return action
     def release_stuck(self):
@@ -73,18 +74,80 @@ class HockeyPlayer:
         print("kart goal vec norm is  {}".format(self.kart_goal_vec_norm))
         print("goal end points 1 are {}{}".format(goal_end1x,goal_end1y))
         print("goal end points 2 are {}{}".format(goal_end2x,goal_end2y))
-        steer_direction = np.sign(self.kart_goal_vec_norm[0])
-        tan_steer_angle = self.kart_goal_vec_norm[1]/self.kart_goal_vec_norm[0]
+        print("the radius is {}".format(((self.puck_x) ** 2 )+ ((self.puck_y)**2)))
+        radius = ((self.puck_x) ** 2 )+ ((self.puck_y)**2)
+        tan_steer_angle = puck_x/puck_y
         steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
         print("steer angle is {}".format(steer_angle))
+        if((radius < 0.18) and (abs(self.kart_puck_vec[0]) > 1.2)) :
+            print("Hitting reverse")
+            return self.reverse()
+        else:
+            #print("Hitting else")
+            return self.circle_drive(puck_x,puck_y)
+            #steer_direction = np.sign(self.kart_goal_vec_norm[0])
+            #tan_steer_angle = x/y
+            #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
+            #print("steer angle is {}".format(steer_angle))
+            #tan_steer_angle = (puck_x/puck_y)
+            #steer_direction = np.sign(self.kart_puck_vec_norm[0])
+            #tan_steer_angle = self.kart_puck_vec_norm[1]/self.kart_puck_vec_norm[0]
+            #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi
+            #final_angle = steer_angle
+    #if(final_angle > 60):
+
+     # action.drift = 1
+            #steer_angle_fraction = final_angle/90
+    #action.steer = steer_angle_fraction
+            #steer_direction = np.sign(self.kart_puck_vec_norm[0])
+            #tan_steer_angle = puck_x/puck_y
+            #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
+             
+            #return self.circle_drive(self.puck_x,self.puck_y)
+        #return self.circle_drive(puck_x,puck_y)
+        #steer_direction = np.sign(self.kart_puck_vec_norm[0])
+        #tan_steer_angle = puck_x/puck_y
+        #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
+        """
+        if((self.goal_puck_vec_norm[1]) < 0.2):
+          tan_steer_angle = puck_x/puck_y
+          steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
+          acceleration = 0.50
+          action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': (abs(steer_angle)/90)* steer_direction}
+          return action
+
+        if(self.kart_puck_vec_norm[1] < 0.20 ):
+          if(np.sign(kart_puck_vec_norm[0]) == -1):
+            if(abs(self.goal_end2_vec[0]) >= abs(kart_puck_vec_norm[0])):
+                tan_steer_angle = puck_x/puck_y
+                #tan_steer_angle = self.kart_goal_vec_norm[1]/self.kart_goal_vec_norm[0]
+                steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
+            else:
+              return self.reverse()
+          else:
+            if(abs(self.goal_end1_vec[0]/2) >= abs(kart_puck_vec_norm[0])):
+                tan_steer_angle = puck_x/puck_y
+                #tan_steer_angle = self.kart_goal_vec_norm[1]/self.kart_goal_vec_norm[0]
+                steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
+            else:
+              return self.reverse()
+          
+        else:
+          return self.reverse()
+        """
+        #tan_steer_angle = x/y
+        #tan_steer_angle = self.kart_goal_vec_norm[1]/self.kart_goal_vec_norm[0]
+        #steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
+        #print("steer angle is {}".format(steer_angle))
         #final_angle = steer_angle
         #steer_angle_fraction = final_angle/90
         #b = y/2
         #y = b/2 # this is a heuristic of how far on the circle we wanna move per frame
         #x = (a + np.sign(x) * np.sqrt(r2 - (y - b)**2))*(4 if self.puck_is_close() else 2) # these are heuristic coefficients to allow for sufficient turn
         #acceleration = 0.75 if self.goal_is_close() else 1.0
-        acceleration = 0.50
+        acceleration = 0.20
         action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': (abs(steer_angle)/90)* steer_direction}
+        #action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': (abs(steer_angle)/90)* steer_direction}
         return action
         
     def act(self, image, player_info, state):
@@ -99,7 +162,10 @@ class HockeyPlayer:
         print("kart puck vec norm is {}".format(self.kart_puck_vec_norm))
         self.kart_puck_dp = self.kart_front_vec_norm.dot(self.kart_puck_vec_norm)
         print("kart puck dp is {}".format(self.kart_puck_dp))
+        
         self.goal_line = [(i+j)/2 for i, j in zip(state.soccer.goal_line[1][0], state.soccer.goal_line[1][1])]
+        self.goal_puck_vec = np.array(self.goal_line) - np.array(player_info.kart.location)
+        self.goal_puck_vec_norm = self.goal_puck_vec / np.linalg.norm(self.goal_puck_vec)
         self.kart_goal_vec = np.array(self.goal_line) - np.array(player_info.kart.location)
         self.kart_goal_vec_norm = self.kart_goal_vec / np.linalg.norm(self.kart_goal_vec)
         self.kart_goal_dp = self.kart_front_vec_norm.dot(self.kart_goal_vec_norm)
