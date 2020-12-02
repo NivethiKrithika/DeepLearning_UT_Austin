@@ -47,7 +47,7 @@ class Tournament:
 
         self.k.start()
         self.k.step()
-
+    #ball_location': (0, 0.9000000002980232, 57),
     def play(self, save=None, max_frames=50):
         state = pystk.WorldState()
         if save is not None:
@@ -61,29 +61,34 @@ class Tournament:
         # # Change initial location of the puck 
         state.update()
         pos_ball = state.soccer.ball.location
-        #pos_ball[0] = -4*pos_ball[0]
-        #pos_ball[1] = 4*pos_ball[1]
+        pos_ball[0] = -5
+        pos_ball[1] = 0.9000000002980232
+        pos_ball[2] = 57
         #print("ball position is {}".format(pos_ball))
-        #state.set_ball_location(position=pos_ball)
+        state.set_ball_location(position=pos_ball)
 
         # # Change initial location of the kart
-
+        #10, 0.07000000029802322, 52
         pos_player = state.players[0].kart.location
-        #pos_player[0] = -4*pos_ball[0]
-        pos_player = pos_ball
-        pos_player[0] = 5* pos_ball[0]
-        pos_player[1] = -1.5*pos_ball[1]
-        #pos_player[2] = pos_ball[2]
+        pos_player[0] = 0
+        #pos_player = pos_ball
+        #pos_player[0] = 5* pos_ball[0]
+        pos_player[1] = 0.07000000029802322
+        pos_player[2] = 52
         
         #pos_player[1] = -0.5 * pos_ball[0]
-        print("pos player is {}".format(pos_player))
+        #print("pos player is {}".format(pos_player))
         state.set_kart_location(0, position= pos_player)
-        
-
+        state.update()
+        #goal_line = (state.soccer.goal_line[1][0]+state.soccer.goal_line[1][1])/2
+        #pos_ball = goal_line
+        #pos_ball[0] = -0.5 * goal_line[0]
+        #pos_ball[1] = 0.5 * goal_line[1]
+        #state.set_ball_location(position = pos_ball)
         for t in range(max_frames):
             print('\rframe %d' % t, end='\r')
 
-            state.update()
+            #state.update()
 
             list_actions = []
             for i, p in enumerate(self.active_players):
@@ -119,6 +124,7 @@ class Tournament:
             
                     fig.savefig(os.path.join(save, 'player%02d_%05d.png' % (i, t)))
                     plt.close()
+                state.update()
 
             s = self.k.step(list_actions)
             if not s:  # Game over
