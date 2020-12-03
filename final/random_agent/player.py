@@ -52,9 +52,8 @@ class HockeyPlayer:
         a = x/2
         b = y/2
         y = b/2 # this is a heuristic of how far on the circle we wanna move per frame
-        x = (a + np.sign(x) * np.sqrt(r2 - (y - b)**2))*(4 if self.goal_is_ahead() else 2) # these are heuristic coefficients to allow for sufficient turn
-        #acceleration = 0.75 if self.goal_is_ahead() else 1.0
-        acceleration = 0.40
+        x = (a + np.sign(x) * np.sqrt(r2 - (y - b)**2))*(4 if self.puck_is_close() else 2) # these are heuristic coefficients to allow for sufficient turn
+        acceleration = 0.75 if self.puck_is_close() else 1.0
         action = {'acceleration': acceleration, 'brake': False, 'drift': False, 'nitro': False, 'rescue': False, 'steer': x}
         return action
     def release_stuck(self):
@@ -84,7 +83,10 @@ class HockeyPlayer:
             return self.reverse()
         else:
             #print("Hitting else")
-            return self.circle_drive(puck_x,puck_y)
+            action1 =  self.circle_drive(puck_x,puck_y)
+            print("The action is  {}".format(action1))
+            action1['acceleration'] = 0.40
+            return action1
             #steer_direction = np.sign(self.kart_goal_vec_norm[0])
             #tan_steer_angle = x/y
             #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
