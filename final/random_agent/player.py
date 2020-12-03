@@ -78,7 +78,7 @@ class HockeyPlayer:
         tan_steer_angle = puck_x/puck_y
         steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
         print("steer angle is {}".format(steer_angle))
-        if((radius < 0.18) and (abs(self.kart_puck_vec[0]) > 1.2)) :
+        if((radius < 0.18) and (abs(self.kart_puck_vec[0]) > 2.2)) :
             print("Hitting reverse")
             return self.reverse()
         else:
