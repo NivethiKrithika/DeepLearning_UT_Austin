@@ -78,16 +78,20 @@ class HockeyPlayer:
         tan_steer_angle = puck_x/puck_y
         steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
         print("steer angle is {}".format(steer_angle))
-        if(abs(self.puck_x) > 0.40):
-          return self.reverse()
-        if((radius < 0.018) and (abs(self.kart_puck_vec[0]) > 2.2)):
-          print("Hitting reverse")
-          return self.reverse()
+        if((self.ball_location[0] > -10.5 ) and (self.ball_location[0] < 10.5)):
+            if(abs(self.puck_x) > 0.40):
+              return self.reverse()
+            if((radius < 0.018) and (abs(self.kart_puck_vec[0]) > 2.2)):
+              print("Hitting reverse")
+              return self.reverse()
+            else:
+              action1 =  self.circle_drive(puck_x,puck_y)
+              print("The action is  {}".format(action1))
+              action1['acceleration'] = 0.40
+              return action1
         else:
-          action1 =  self.circle_drive(puck_x,puck_y)
-          print("The action is  {}".format(action1))
-          action1['acceleration'] = 0.40
-          return action1
+            print("Hitting other")
+            return self.circle_drive(puck_x,puck_y)
             #steer_direction = np.sign(self.kart_goal_vec_norm[0])
             #tan_steer_angle = x/y
             #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
@@ -165,8 +169,10 @@ class HockeyPlayer:
         print("kart puck vec norm is {}".format(self.kart_puck_vec_norm))
         self.kart_puck_dp = self.kart_front_vec_norm.dot(self.kart_puck_vec_norm)
         print("kart puck dp is {}".format(self.kart_puck_dp))
-        
+        print("goal line 1 is {}".format(state.soccer.goal_line[1][0]))
+        print("goal line 2 is {}".format(state.soccer.goal_line[1][1]))
         self.goal_line = [(i+j)/2 for i, j in zip(state.soccer.goal_line[1][0], state.soccer.goal_line[1][1])]
+        self.ball_location = state.soccer.ball.location
         self.goal_puck_vec = np.array(self.goal_line) - np.array(player_info.kart.location)
         self.goal_puck_vec_norm = self.goal_puck_vec / np.linalg.norm(self.goal_puck_vec)
         self.kart_goal_vec = np.array(self.goal_line) - np.array(player_info.kart.location)
