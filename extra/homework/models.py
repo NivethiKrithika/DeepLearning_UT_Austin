@@ -117,7 +117,8 @@ class TCN(torch.nn.Module, LanguageModel):
         #self.classifier = torch.nn.Linear(c,28)
         self.soft = torch.nn.Softmax(dim = 1)
         self.kw = torch.nn.Parameter(torch.zeros(128,28)) 
-        self.kw1 = torch.nn.Parameter(torch.zeros(1,28))    
+        self.kw1 = torch.nn.Parameter(torch.zeros(1,28))
+        self.kw2 = torch.nn.Parameter(torch.zeros(16,28))     
         self.m = torch.nn.ConstantPad1d((0, 1), 0)
         self.sig_layer = torch.nn.Sigmoid()
         self.lsoft = torch.nn.LogSoftmax(dim = 1)
@@ -140,11 +141,13 @@ class TCN(torch.nn.Module, LanguageModel):
         #r1 = x[:,:,0]
         if(x.size(0) == 128):
           r = self.kw
+        elif(x.size(0) == 16):
+          r = self.kw2
         else:
           r = self.kw1
         #print("rrr shape is {}".format(r1.shape))
-        print("r shape is {}".format(r.shape))
-        print("x shape is {}".format(x.shape))
+        #print("r shape is {}".format(r.shape))
+        #print("x shape is {}".format(x.shape))
         x = torch.cat((r[:,:,None],x),dim = 2)
         z = self.final_layers(x)
         q = self.final_most(z)
