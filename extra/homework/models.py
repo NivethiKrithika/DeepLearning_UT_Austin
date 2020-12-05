@@ -66,11 +66,11 @@ class TCN(torch.nn.Module, LanguageModel):
         def __init__(self, in_channels, out_channels, kernel_size, dilation):
           super().__init__()
           self.block  = torch.nn.Sequential(torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.Conv1d(in_channels,out_channels,kernel_size,dilation = dilation),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1),
                                       torch.nn.ConstantPad1d((2*dilation,0),0),
-                                      weight_norm(torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation)),
+                                      torch.nn.Conv1d(out_channels,out_channels,kernel_size,dilation = dilation),
                                       torch.nn.ReLU(),
                                       torch.nn.Dropout(p = 0.1))
           #self.block[1].weight.data.fill_(0.01)
@@ -78,7 +78,7 @@ class TCN(torch.nn.Module, LanguageModel):
           #self.block[1].weight = torch.nn.Parameter(0.01)
 
           self.down_size = None
-          self.down_size = weight_norm(torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1))
+          self.down_size = torch.nn.Conv1d(in_channels,out_channels,kernel_size = 1)
                                            #      torch.nn.BatchNorm1d(out_channels)) 
 
 
@@ -99,14 +99,14 @@ class TCN(torch.nn.Module, LanguageModel):
             if(self.down_size):
                 identity = self.down_size(x)
                 #print("res size is {}".format(identity.shape))
-            return self.block(x)
+            return self.block(x) + identity
             raise NotImplementedError('CausalConv1dBlock.forward')
 
     def __init__(self):
         super().__init__()
         layers = []
         c = 28
-        L = [28,32,40,50]
+        L = [24,26,28,30,32,34,36,38,40,42,44,48,50]
         dilation1 = 1
         for out_channels in L:
             layers.append(self.CausalConv1dBlock(c,out_channels,3,dilation = dilation1))
@@ -116,9 +116,9 @@ class TCN(torch.nn.Module, LanguageModel):
         self.final_most = torch.nn.Conv1d(c,28,1)
         #self.classifier = torch.nn.Linear(c,28)
         self.soft = torch.nn.Softmax(dim = 1)
-        self.kw = torch.nn.Parameter(torch.zeros(128,28)) 
-        self.kw1 = torch.nn.Parameter(torch.zeros(1,28))
-        self.kw2 = torch.nn.Parameter(torch.zeros(16,28))     
+        self.kw = torch.nn.Parameter(torch.zeros(28),requires_grad = True) 
+        #self.kw1 = torch.nn.Parameter(torch.zeros(1,28),requires_grad = True)
+        #self.kw2 = torch.nn.Parameter(torch.zeros(16,28),requires_grad =True)     
         self.m = torch.nn.ConstantPad1d((0, 1), 0)
         self.sig_layer = torch.nn.Sigmoid()
         self.lsoft = torch.nn.LogSoftmax(dim = 1)
@@ -132,34 +132,32 @@ class TCN(torch.nn.Module, LanguageModel):
         #raise NotImplementedError('TCN.__init__')
 
     def forward(self, x):
+        #print("x inital shape is {}".format(x.shape))
         y1 = x
         #print("x shape is {}".format(x.shape))
         if(x.size(2) == 0):
           t = self.m(x)
           z = self.final_layers(t)
           return (self.soft(self.final_most(z)))
-        #r1 = x[:,:,0]
-        if(x.size(0) == 128):
-          r = self.kw
-        elif(x.size(0) == 16):
-          r = self.kw2
-        else:
-          r = self.kw1
-        #print("rrr shape is {}".format(r1.shape))
-        #print("r shape is {}".format(r.shape))
-        #print("x shape is {}".format(x.shape))
+        r = self.kw
+        r = r.expand(x.size(0),-1)
         x = torch.cat((r[:,:,None],x),dim = 2)
+        #print("x shape is {}".format(x.shape))
         z = self.final_layers(x)
         q = self.final_most(z)
-        return (self.lsoft(q))
+        #print("q shape is {}".format(q.shape))
+        #a = torch.cat((r[:,:,None],q),dim = 2)
+        return (q)
+        #return (self.lsoft(q))
         """
         Your code here
         Return the logit for the next character for prediction for any substring of x
-
+wqr
         @x: torch.Tensor((B, vocab_size, L)) a batch of one-hot encodings
         @return torch.Tensor((B, vocab_size, L+1)) a batch of log-likelihoods or logits
         """
         raise NotImplementedError('TCN.forward')
+
 
     def predict_all(self, some_text):
         #print("some_txt is {}".format(some_text))
@@ -175,8 +173,11 @@ class TCN(torch.nn.Module, LanguageModel):
           return(torch.squeeze(z,0))
 
          #  return (self.m(t))
-        s1 = t[:,:,0]
-        s2 = torch.cat((s1[:,:,None],t),dim = 2)
+        #s1 = t[:,:,0]
+        s1 = self.kw
+        #print("s1 shape is {}".format(s1.shape))
+        #print("t shape is {}".format(t.shape))
+        s2 = torch.cat((s1[None,:,None],t),dim = 2)
         t1 = self.final_most(self.final_layers(s2))
         
         #print("t shape is {}".format(t.shape))
