@@ -3,11 +3,11 @@ from . import utils
 import torch
 char_set =['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',' ','.']
 def log_likelihood(model: LanguageModel, some_text: str):
-    print("model is {}text is{} ".format(model,some_text))
+    #print("model is {}text is{} ".format(model,some_text))
     #print("model is {}text is{} ".format(model,some_text))
     a = model.predict_all(some_text)
     #print(a.shape)
-    print(a)
+    #print(a)
     #print(a)
     #b = -a
     s = utils.one_hot(some_text)
@@ -41,7 +41,7 @@ def sample_random(model: LanguageModel, max_length: int = 100):
           s = torch.distributions.Categorical(logits = o).sample()
       else:
           s = torch.distributions.Categorical(logits = o[:,-1]).sample()
-      print(s)
+      #print(s)
       #print("char is {}".format(char_set[s.item()]))
           #print("o's shape is {}".format(o[:,-2].shape))
           #s = torch.distributions.Categorical(logits = o[:,-1]).sample()
@@ -50,7 +50,7 @@ def sample_random(model: LanguageModel, max_length: int = 100):
       S = S+(char_set[s.item()])
       if (char_set[s.item()] == '.'):
         break
-      print(S)
+      #print(S)
     return (S)
 
 class TopNHeap:
@@ -85,7 +85,7 @@ def beam_search(model: LanguageModel, beam_size: int, n_results: int = 10, max_l
     h = TopNHeap(n_results)
     for i in range(30):
       string1 = sample_random(model,max_length)
-      print(string1)
+      #print(string1)
       strings.append(string1)
       log_like = log_likelihood(model,string1)
       if(average_log_likelihood == True):
