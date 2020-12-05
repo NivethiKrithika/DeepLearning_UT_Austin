@@ -20,7 +20,6 @@ def seed_torch(seed=1029):
 def train(args):
     from os import path
     import torch.utils.tensorboard as tb
-    seed_torch()
     model1 = TCN()
     max_len1 = 26
     train_logger, valid_logger = None, None
@@ -28,13 +27,14 @@ def train(args):
         train_logger = tb.SummaryWriter(path.join(args.log_dir, 'train'), flush_secs=1)
         valid_logger = tb.SummaryWriter(path.join(args.log_dir, 'valid'), flush_secs=1)
     data1 = SpeechDataset('data/train.txt',transform = one_hot)
-    valid_data = SpeechDataset('data/train.txt')
+    valid_data = SpeechDataset('data/valid.txt')
     
     print(len(data1))
     batch_size = 128
     criterion = torch.nn.CrossEntropyLoss()
     n_epochs = 20
-    optimizer = torch.optim.SGD(model1.parameters(),lr = 1e-3,momentum = 0.9,weight_decay = 1e-5)
+    optimizer = torch.optim.Adam(model1.parameters(),lr = 6e-5)
+    #optimizer = torch.optim.SGD(model1.parameters(),lr = 1e-3,momentum = 0.9,weight_decay = 1e-5)
     for iter in range(n_epochs):
         permutation = torch.randperm(25000)
         j = 0
@@ -51,7 +51,7 @@ def train(args):
                 t_label.append(label)
             train_data = torch.stack(t_list)
             train_label = torch.stack(t_label)
-            output = model1(train_data)
+            output = model1(train_data[:,:,:-1])
             #print(output[:,:,-1].shape)
             #print(train_label.shape)
             loss = criterion(output[:,:,-1],train_label.argmax(1))
@@ -62,9 +62,13 @@ def train(args):
                 print("loss is {}".format(loss))
         model1.eval()
         lls = []
+        k = 1
         for s in valid_data:
+            k = k + 1
             ll = model1.predict_all(s)
             lls.append(float((ll[:, :-1]*utils.one_hot(s)).sum()/len(s)))
+            if(k == 1000):
+              break
         nll = -np.mean(lls)
         print("nll is {}".format(nll))
 
@@ -85,7 +89,7 @@ def train(args):
 
     """
     #raise NotImplementedError('train')
-    save_model(model)
+    save_model(model1)
 
 
 if __name__ == '__main__':
