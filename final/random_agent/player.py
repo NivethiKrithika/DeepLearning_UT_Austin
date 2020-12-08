@@ -20,6 +20,7 @@ class HockeyPlayer:
         self.history = defaultdict(list)
         self.framestep = 0
         self.goal_close_thresh = 0.2
+        self.player_id = player_id%2
     def puck_is_close(self): 
         # Check if puck is close based on heuristic
         return np.sqrt(self.puck_x**2 + self.puck_y**2) < self.puck_close_thresh
@@ -65,33 +66,63 @@ class HockeyPlayer:
         else:
             self.kart_stuck_counter = 0
             return {'acceleration': 0, 'brake': False, 'drift': False, 'nitro': False, 'rescue': True, 'steer': 0}
-    def steer_towards_goal(self,x,y,puck_x,puck_y,wheelbase,goal_end1x,goal_end1y, goal_end2x,goal_end2y):
-        print("kart goal distance is {}".format(self.kart_goal_dp))
-        print("x and y of goal are {} {}".format(x,y))
-        print("puck x and y are {} {}".format(puck_x,puck_y))
-        print("kart puck vector norm is {}".format(self.kart_puck_vec_norm))
-        print("kart goal vec norm is  {}".format(self.kart_goal_vec_norm))
-        print("goal end points 1 are {}{}".format(goal_end1x,goal_end1y))
-        print("goal end points 2 are {}{}".format(goal_end2x,goal_end2y))
-        print("the radius is {}".format(((self.puck_x) ** 2 )+ ((self.puck_y)**2)))
-        radius = ((self.puck_x) ** 2 )+ ((self.puck_y)**2)
-        tan_steer_angle = puck_x/puck_y
-        steer_angle = (math.atan(tan_steer_angle) * 180)/np.pi;
-        print("steer angle is {}".format(steer_angle))
-        if((self.ball_location[0] > -10.5 ) and (self.ball_location[0] < 10.5)):
+    def steer_towards_goal(self,puck_x,puck_y):
+      print("kart goal distance is {}".format(self.kart_goal_dp))
+      #print("x and y of goal are {} {}".format(x,y))
+      print("puck x and y are {} {}".format(self.puck_x,self.puck_y))
+      print("kart puck vector norm is {}".format(self.kart_puck_vec_norm))
+      print("kart goal vec norm is  {}".format(self.kart_goal_vec_norm))
+      #print("goal end points 1 are {}{}".format(goal_end1x,goal_end1y))
+      #print("goal end points 2 are {}{}".format(goal_end2x,goal_end2y))
+      print("abs value is {}".format(abs(self.kart_puck_vec[0])))
+      print("the radius is {}".format(((self.puck_x) ** 2 )+ ((self.puck_y)**2)))
+      radius = ((self.puck_x) ** 2 )+ ((self.puck_y)**2)
+      print("kart goal dp is {}".format("kart_goal_dp"))
+      
+        #if(abs(puck_x) > 0.015):
+          #print("Hitting here in threshold")
+          #threshold_to_reverse = 10
+        #print("steer angle is {}".format(steer_angle))
+      if((self.ball_location[0] > -10.5 ) and (self.ball_location[0] < 10.5)):
+        if(self.kart_goal_dp > 0):
+          threshold_to_reverse = 6
+          if(abs(self.kart_puck_vec[0]) > 8):
+            threshold_to_reverse = abs(self.kart_puck_vec[0])
+          print("thr to rev is {}".format(threshold_to_reverse))
+          if(self.kart_puck_vec[2] > threshold_to_reverse):           
             if(abs(self.puck_x) > 0.40):
               return self.reverse()
-            if((radius < 0.018) and (abs(self.kart_puck_vec[0]) > 2.2)):
+            if((radius < 0.040) and (abs(self.puck_x) > 0.15)):
               print("Hitting reverse")
-              return self.reverse()
+              #return self.circle_drive(puck_x+)
+              #return self.reverse()
+              action = {'acceleration': 0, 'brake': True, 'drift': False, 'nitro': False, 'rescue': False, 'steer': 0}
+              return action
+              #action2['steer'] = action2['steer'] * 1.25            
             else:
               action1 =  self.circle_drive(puck_x,puck_y)
               print("The action is  {}".format(action1))
               action1['acceleration'] = 0.40
               return action1
+          else:
+            print("Hitting in else")
+            if((abs(self.puck_x) > 0.15)):
+              action = {'acceleration': 0, 'brake': True, 'drift': False, 'nitro': False, 'rescue': False, 'steer': 0}
+              return action
+            else:
+              action = self.circle_drive(puck_x,puck_y)
+              action['acceleration'] = 0.40
+              return action
         else:
-            print("Hitting other")
-            return self.circle_drive(puck_x,puck_y)
+          action = self.circle_drive(puck_x,puck_y)
+          action['acceleration'] = 0.40
+          return action   
+      else:
+        action = self.circle_drive(puck_x,puck_y)
+        action['acceleration'] = 0.40
+        return action 
+      
+
             #steer_direction = np.sign(self.kart_goal_vec_norm[0])
             #tan_steer_angle = x/y
             #steer_angle = (math.atan(tan_steer_angle/(wheelbase/2)) * 180)/np.pi;
@@ -164,14 +195,15 @@ class HockeyPlayer:
         #print("puck location is {}".format(state.soccer.ball.location))
         #print("kart location is {}".format(player_info.kart.location))
         self.kart_puck_vec = np.array(state.soccer.ball.location) - np.array(player_info.kart.location)
+        print("player id is  {}".format(self.player_id))
         print("kart puck vector is {}".format(self.kart_puck_vec))
         self.kart_puck_vec_norm = self.kart_puck_vec / np.linalg.norm(self.kart_puck_vec)
         print("kart puck vec norm is {}".format(self.kart_puck_vec_norm))
         self.kart_puck_dp = self.kart_front_vec_norm.dot(self.kart_puck_vec_norm)
         print("kart puck dp is {}".format(self.kart_puck_dp))
-        print("goal line 1 is {}".format(state.soccer.goal_line[1][0]))
-        print("goal line 2 is {}".format(state.soccer.goal_line[1][1]))
-        self.goal_line = [(i+j)/2 for i, j in zip(state.soccer.goal_line[1][0], state.soccer.goal_line[1][1])]
+        print("goal line 1 is {}".format(state.soccer.goal_line[self.player_id ^ 1][0]))
+        print("goal line 2 is {}".format(state.soccer.goal_line[self.player_id ^ 1][1]))
+        self.goal_line = [(i+j)/2 for i, j in zip(state.soccer.goal_line[self.player_id ^1][0], state.soccer.goal_line[self.player_id ^ 1][1])]
         self.ball_location = state.soccer.ball.location
         self.goal_puck_vec = np.array(self.goal_line) - np.array(player_info.kart.location)
         self.goal_puck_vec_norm = self.goal_puck_vec / np.linalg.norm(self.goal_puck_vec)
@@ -187,15 +219,15 @@ class HockeyPlayer:
         self.view = np.array(player_info.camera.view).T
         self.puck_x, self.puck_y = to_image(state.soccer.ball.location, self.proj, self.view)
         self.kart_x, self.kart_y = to_image(player_info.kart.location, self.proj, self.view)
-        self.goal_x, self.goal_y = (to_image(state.soccer.goal_line[1][0], self.proj, self.view) + 
-                         to_image(state.soccer.goal_line[1][1], self.proj, self.view)) / 2
-        self.goal_end1_vec = np.array(state.soccer.goal_line[1][0]) - np.array(player_info.kart.location)
-        self.goal_end2_vec = np.array(state.soccer.goal_line[1][1]) - np.array(player_info.kart.location)
-        self.goal_end1_x,self.goal_end1_y = to_image(state.soccer.goal_line[1][0],self.proj,self.view)
-        self.goal_end2_x,self.goal_end2_y = to_image(state.soccer.goal_line[1][1],self.proj,self.view)
+        #self.goal_x, self.goal_y = (to_image(state.soccer.goal_line[1][0], self.proj, self.view) + 
+                       #  to_image(state.soccer.goal_line[1][1], self.proj, self.view)) / 2
+        #self.goal_end1_vec = np.array(state.soccer.goal_line[self.player_id][0] & 1) - np.array(player_info.kart.location)
+        #self.goal_end2_vec = np.array(state.soccer.goal_line[self.player_id][1] & 1) - np.array(player_info.kart.location)
+        #self.goal_end1_x,self.goal_end1_y = to_image(state.soccer.goal_line[1][0],self.proj,self.view)
+        #self.goal_end2_x,self.goal_end2_y = to_image(state.soccer.goal_line[1][1],self.proj,self.view)
         self.current_vel = np.linalg.norm(player_info.kart.velocity)
-        print("goal end 1 vector is {}".format(self.goal_end1_vec))
-        print("goal end 2 vector is {}".format(self.goal_end2_vec))
+        #print("goal end 1 vector is {}".format(self.goal_end1_vec))
+        #print("goal end 2 vector is {}".format(self.goal_end2_vec))
         # puck_is_super_close =  np.sqrt(self.puck_x**2 + self.puck_y**2) < self.puck_super_close_thresh
         #if self.kart_is_stuck():
          #   return self.release_stuck()
@@ -206,7 +238,7 @@ class HockeyPlayer:
              #if self.puck_is_close() and self.goal_is_ahead():
                 # print("Hitting close here")
         #if self.goal_is_ahead():
-        return self.steer_towards_goal(self.goal_x, self.goal_y,self.puck_x,self.puck_y,player_info.kart.wheel_base,self.goal_end1_x,self.goal_end1_y,self.goal_end2_x,self.goal_end2_y)
+        return self.steer_towards_goal(self.puck_x,self.puck_y)
             # else:
              #    return self.circle_drive(self.puck_x, self.puck_y)
         #else:
