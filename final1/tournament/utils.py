@@ -1,6 +1,14 @@
 import pystk
 import numpy as np
+import os
+import subprocess
+import matplotlib.pyplot as plt
+import importlib
 
+def to_image(x, proj, view):
+    p = proj @ view @ np.array(list(x) + [1])
+    # return np.clip(np.array([p[0] / p[-1], -p[1] / p[-1]]), -1, 1)
+    return np.array([p[0] / p[-1], -p[1] / p[-1]])
 
 class Player:
     def __init__(self, player, team=0):
@@ -58,7 +66,13 @@ class Tournament:
             for i, p in enumerate(self.active_players):
                 player = state.players[i]
                 image = np.array(self.k.render_data[i].image)
-                
+                # Perform 3D vecotr manipulation
+                kart_front_vec = np.array(player.kart.front) - np.array(player.kart.location)
+                kart_front_vec_norm = kart_front_vec / np.linalg.norm(kart_front_vec)
+                kart_puck_vec = np.array(state.soccer.ball.location) - np.array(player.kart.location)
+                kart_puck_vec_norm = kart_puck_vec / np.linalg.norm(kart_puck_vec)
+                kart_puck_dp = kart_front_vec_norm.dot(kart_puck_vec_norm)
+                print(kart_puck_dp)
                 action = pystk.Action()
                 player_action = p(image, player)
                 for a in player_action:
@@ -66,8 +80,22 @@ class Tournament:
                 
                 list_actions.append(action)
 
+                puck_location = state.soccer.ball.location
+                proj = np.array(player.camera.projection).T
+                view = np.array(player.camera.view).T
+
                 if save is not None:
-                    PIL.Image.fromarray(image).save(os.path.join(save, 'player%02d_%05d.png' % (i, t)))
+                    PIL.Image.fromarray(image).save(os.path.join(save, save+'_player%02d_%05d.png' % (i, t)))
+                    puck_location_image = to_image(puck_location, proj, view)
+                    
+                    with open(os.path.join(save,save+'_player%02d_%05d.csv' % (i, t)), 'w') as f:
+                        if (kart_puck_dp>0.0) and (-1.0 <= round(puck_location_image[0],1) <= 1.0) and (-1.0 <= round(puck_location_image[1],1) <= 1.0) :
+                            f.write('%0d,%0.1f,%0.1f' % tuple((1,round(puck_location_image[0],1),round(puck_location_image[1],1))))
+                        else:
+                            f.write('%0d,%0.1f,%0.1f' % tuple((0,2,2)))
+
+                        # f.write('%0.2f,%0.1f,%0.1f' % tuple((kart_puck_dp,puck_location_image[0],puck_location_image[1])))
+                    
 
             s = self.k.step(list_actions)
             if not s:  # Game over
@@ -76,7 +104,8 @@ class Tournament:
         if save is not None:
             import subprocess
             for i, p in enumerate(self.active_players):
-                dest = os.path.join(save, 'player%02d' % i)
+                
+                dest = os.path.join(save, save+'_player%02d' % i)
                 output = save + '_player%02d.mp4' % i
                 subprocess.call(['ffmpeg', '-y', '-framerate', '10', '-i', dest + '_%05d.png', output])
         if hasattr(state, 'soccer'):
@@ -86,3 +115,4 @@ class Tournament:
     def close(self):
         self.k.stop()
         del self.k
+
