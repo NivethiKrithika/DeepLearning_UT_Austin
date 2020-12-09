@@ -1,5 +1,5 @@
-from .utils import Player
-from .utils import Tournament
+from .mod_utils import Player
+from .mod_utils import Tournament
 from argparse import ArgumentParser
 import importlib
 
