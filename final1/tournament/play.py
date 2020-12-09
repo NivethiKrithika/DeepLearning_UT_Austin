@@ -2,19 +2,26 @@ from .mod_utils import Player
 from .mod_utils import Tournament
 from argparse import ArgumentParser
 import importlib
-
+import numpy as np
 import pystk
 
 
 class DummyPlayer:
     def __init__(self, team=0):
         self.team = team
+        if(team == 0):
+          self.kart = 'konqi'
+        else:
+          all_players = ['adiumy', 'amanda', 'beastie', 'emule', 'gavroche', 'gnu', 'hexley', 'kiki', 'konqi', 'nolok', 'pidgin', 'puffy', 'sara_the_racer', 'sara_the_wizard', 'suzanne', 'tux', 'wilber', 'xue']
+          self.kart = all_players[np.random.choice(len(all_players))]
+    
+        
 
     @property
     def config(self):
         return pystk.PlayerConfig(
             controller=pystk.PlayerConfig.Controller.AI_CONTROL,
-            team=self.team)
+            team=self.team,kart = self.kart)
     
     def __call__(self, image, player_info):
         return dict()
